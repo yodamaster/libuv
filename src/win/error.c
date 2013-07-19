@@ -133,7 +133,7 @@ int uv_translate_sys_error(int sys_errno) {
     case ERROR_DIRECTORY:                   return UV_ENOENT;
     case ERROR_FILE_NOT_FOUND:              return UV_ENOENT;
     case ERROR_INVALID_NAME:                return UV_ENOENT;
-    case ERROR_INVALID_REPARSE_DATA:        return UV_ENOENT;
+    case 0x00001128/*ERROR_INVALID_REPARSE_DATA*/:        return UV_ENOENT;
     case ERROR_MOD_NOT_FOUND:               return UV_ENOENT;
     case ERROR_PATH_NOT_FOUND:              return UV_ENOENT;
     case WSAHOST_NOT_FOUND:                 return UV_ENOENT;

@@ -327,7 +327,7 @@ int uv_getaddrinfo(uv_loop_t* loop,
   /* Ask thread to run. Treat this as a long operation */
   if (QueueUserWorkItem(&getaddrinfo_thread_proc,
                         req,
-                        WT_EXECUTELONGFUNCTION) == 0) {
+                        0x00000010/*WT_EXECUTELONGFUNCTION*/) == 0) {
     err = GetLastError();
     goto error;
   }

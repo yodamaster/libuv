@@ -31,10 +31,14 @@
 #include "uv.h"
 #include "internal.h"
 
-#include <winsock2.h>
+#include <Winsock2.h>
 #include <winperf.h>
-#include <iphlpapi.h>
-#include <psapi.h>
+
+#define s6_addr
+#include "Iphlpapi/iphlpapi.h"
+#undef s6_addr
+
+#include "psapi/psapi.h"
 #include <tlhelp32.h>
 #include <windows.h>
 
@@ -314,7 +318,7 @@ uint64_t uv_get_free_memory(void) {
   MEMORYSTATUSEX memory_status;
   memory_status.dwLength = sizeof(memory_status);
 
-  if(!GlobalMemoryStatusEx(&memory_status))
+  if(!pGlobalMemoryStatusEx(&memory_status))
   {
      return -1;
   }
@@ -327,7 +331,7 @@ uint64_t uv_get_total_memory(void) {
   MEMORYSTATUSEX memory_status;
   memory_status.dwLength = sizeof(memory_status);
 
-  if(!GlobalMemoryStatusEx(&memory_status))
+  if(!pGlobalMemoryStatusEx(&memory_status))
   {
     return -1;
   }
@@ -553,7 +557,7 @@ int uv_uptime(double* uptime) {
 
   data_block = (PERF_DATA_BLOCK*) buffer;
 
-  if (wmemcmp(data_block->Signature, L"PERF", 4) != 0)
+  if (memcmp(data_block->Signature, L"PERF", 4 * sizeof(TCHAR)) != 0)
     goto internalError;
 
   if (data_size < data_block->HeaderLength + sizeof(*object_type))
@@ -581,8 +585,8 @@ int uv_uptime(double* uptime) {
         BYTE* address = (BYTE*) object_type + object_type->DefinitionLength +
                         counter_definition->CounterOffset;
         uint64_t value = *((uint64_t*) address);
-        *uptime = (double) (object_type->PerfTime.QuadPart - value) /
-                  (double) object_type->PerfFreq.QuadPart;
+        *uptime = (double) (__int64)(object_type->PerfTime.QuadPart - value) /
+                  (double) (__int64)object_type->PerfFreq.QuadPart;
         free(malloced_buffer);
         return 0;
       }
@@ -865,7 +869,8 @@ int uv_interface_addresses(uv_interface_address_t** addresses_ptr,
        win_address = win_address->Next) {
     /* Use IP_ADAPTER_UNICAST_ADDRESS_XP to retain backwards compatibility */
     /* with Windows XP */
-    IP_ADAPTER_UNICAST_ADDRESS_XP* unicast_address;
+	/* In "Iphlpapi/iptypes.h" we download, the definition of IP_ADAPTER_UNICAST_ADDRESS is just the same as *_XP */
+    IP_ADAPTER_UNICAST_ADDRESS* unicast_address;
     int name_size;
 
     /* Interfaces that are not 'up' should not be reported. Also skip */
@@ -892,7 +897,7 @@ int uv_interface_addresses(uv_interface_address_t** addresses_ptr,
 
     /* Count the number of addresses associated with this interface, and */
     /* compute the size. */
-    for (unicast_address = (IP_ADAPTER_UNICAST_ADDRESS_XP*)
+    for (unicast_address = (IP_ADAPTER_UNICAST_ADDRESS*)
                            win_address->FirstUnicastAddress;
          unicast_address != NULL;
          unicast_address = unicast_address->Next) {
@@ -917,7 +922,7 @@ int uv_interface_addresses(uv_interface_address_t** addresses_ptr,
   for (win_address = win_address_buf;
        win_address != NULL;
        win_address = win_address->Next) {
-    IP_ADAPTER_UNICAST_ADDRESS_XP* unicast_address;
+    IP_ADAPTER_UNICAST_ADDRESS* unicast_address;
     IP_ADAPTER_PREFIX* prefix;
     int name_size;
     size_t max_name_size;
@@ -948,7 +953,7 @@ int uv_interface_addresses(uv_interface_address_t** addresses_ptr,
 
     /* Add an uv_interface_address_t element for every unicast address. */
     /* Walk the prefix list in tandem with the address list. */
-    for (unicast_address = (IP_ADAPTER_UNICAST_ADDRESS_XP*)
+    for (unicast_address = (IP_ADAPTER_UNICAST_ADDRESS*)
                            win_address->FirstUnicastAddress;
          unicast_address != NULL && prefix != NULL;
          unicast_address = unicast_address->Next, prefix = prefix->Next) {
@@ -969,7 +974,7 @@ int uv_interface_addresses(uv_interface_address_t** addresses_ptr,
       }
 
       uv_address->is_internal =
-          (win_address->IfType == IF_TYPE_SOFTWARE_LOOPBACK);
+          (win_address->IfType == 24/*IF_TYPE_SOFTWARE_LOOPBACK*/);
 
       if (sa->sa_family == AF_INET6) {
         uv_address->address.address6 = *((struct sockaddr_in6 *) sa);

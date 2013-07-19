@@ -50,6 +50,35 @@ static HANDLE uv_global_job_handle_;
 static uv_once_t uv_global_job_handle_init_guard_ = UV_ONCE_INIT;
 
 
+typedef struct _IO_COUNTERS {
+  ULONGLONG ReadOperationCount;
+  ULONGLONG WriteOperationCount;
+  ULONGLONG OtherOperationCount;
+  ULONGLONG ReadTransferCount;
+  ULONGLONG WriteTransferCount;
+  ULONGLONG OtherTransferCount;
+} IO_COUNTERS, *PIO_COUNTERS;
+
+typedef struct _JOBOBJECT_EXTENDED_LIMIT_INFORMATION {
+  JOBOBJECT_BASIC_LIMIT_INFORMATION BasicLimitInformation;
+  IO_COUNTERS                       IoInfo;
+  SIZE_T                            ProcessMemoryLimit;
+  SIZE_T                            JobMemoryLimit;
+  SIZE_T                            PeakProcessMemoryUsed;
+  SIZE_T                            PeakJobMemoryUsed;
+} JOBOBJECT_EXTENDED_LIMIT_INFORMATION, *PJOBOBJECT_EXTENDED_LIMIT_INFORMATION;
+
+//
+// Job Limit Flags
+//
+#define JOB_OBJECT_LIMIT_SCHEDULING_CLASS       0x80
+#define JOB_OBJECT_LIMIT_PROCESS_MEMORY         0x100
+#define JOB_OBJECT_LIMIT_JOB_MEMORY             0x200
+#define JOB_OBJECT_LIMIT_DIE_ON_UNHANDLED_EXCEPTION 0x400
+#define JOB_OBJECT_LIMIT_BREAKAWAY_OK           0x800
+#define JOB_OBJECT_LIMIT_SILENT_BREAKAWAY_OK    0x1000
+#define JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE      0x2000
+
 static void uv__init_global_job_handle(void) {
   /* Create a job object and set it up to kill all contained processes when
    * it's closed. Since this handle is made non-inheritable and we're not
@@ -84,7 +113,7 @@ static void uv__init_global_job_handle(void) {
     uv_fatal_error(GetLastError(), "CreateJobObjectW");
 
   if (!SetInformationJobObject(uv_global_job_handle_,
-                               JobObjectExtendedLimitInformation,
+                               9/*JobObjectExtendedLimitInformation*/,
                                &info,
                                sizeof info))
     uv_fatal_error(GetLastError(), "SetInformationJobObject");
@@ -224,7 +253,7 @@ static WCHAR* search_path_join_test(const WCHAR* dir,
 
   attrs = GetFileAttributesW(result);
 
-  if (attrs != INVALID_FILE_ATTRIBUTES &&
+  if (attrs != (DWORD)-1/*INVALID_FILE_ATTRIBUTES*/ &&
       !(attrs & FILE_ATTRIBUTE_DIRECTORY)) {
     return result;
   }
@@ -743,7 +772,7 @@ void uv_process_proc_exit(uv_loop_t* loop, uv_process_t* handle) {
 
   /* Unregister from process notification. */
   if (handle->wait_handle != INVALID_HANDLE_VALUE) {
-    UnregisterWait(handle->wait_handle);
+    pUnregisterWait(handle->wait_handle);
     handle->wait_handle = INVALID_HANDLE_VALUE;
   }
 
@@ -771,7 +800,7 @@ void uv_process_close(uv_loop_t* loop, uv_process_t* handle) {
   if (handle->wait_handle != INVALID_HANDLE_VALUE) {
     /* This blocks until either the wait was cancelled, or the callback has */
     /* completed. */
-    BOOL r = UnregisterWaitEx(handle->wait_handle, INVALID_HANDLE_VALUE);
+    BOOL r = pUnregisterWaitEx(handle->wait_handle, INVALID_HANDLE_VALUE);
     if (!r) {
       /* This should never happen, and if it happens, we can't recover... */
       uv_fatal_error(GetLastError(), "UnregisterWaitEx");
@@ -1002,9 +1031,9 @@ int uv_spawn(uv_loop_t* loop,
   }
 
   /* Setup notifications for when the child process exits. */
-  result = RegisterWaitForSingleObject(&process->wait_handle,
+  result = pRegisterWaitForSingleObject(&process->wait_handle,
       process->process_handle, exit_wait_callback, (void*)process, INFINITE,
-      WT_EXECUTEINWAITTHREAD | WT_EXECUTEONLYONCE);
+      WT_EXECUTEINWAITTHREAD | 0x00000008/*WT_EXECUTEONLYONCE*/);
   if (!result) {
     uv_fatal_error(GetLastError(), "RegisterWaitForSingleObject");
   }

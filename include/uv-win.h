@@ -102,7 +102,7 @@ typedef intptr_t ssize_t;
          {0xb5367df0, 0xcbac, 0x11cf,                                         \
          {0x95, 0xca, 0x00, 0x80, 0x5f, 0x48, 0xa1, 0x92}}
 
-  typedef BOOL PASCAL (*LPFN_ACCEPTEX)
+  typedef BOOL (PASCAL *LPFN_ACCEPTEX)
                       (SOCKET sListenSocket,
                        SOCKET sAcceptSocket,
                        PVOID lpOutputBuffer,
@@ -112,7 +112,7 @@ typedef intptr_t ssize_t;
                        LPDWORD lpdwBytesReceived,
                        LPOVERLAPPED lpOverlapped);
 
-  typedef BOOL PASCAL (*LPFN_CONNECTEX)
+  typedef BOOL (PASCAL *LPFN_CONNECTEX)
                       (SOCKET s,
                        const struct sockaddr* name,
                        int namelen,
@@ -121,7 +121,7 @@ typedef intptr_t ssize_t;
                        LPDWORD lpdwBytesSent,
                        LPOVERLAPPED lpOverlapped);
 
-  typedef void PASCAL (*LPFN_GETACCEPTEXSOCKADDRS)
+  typedef void (PASCAL *LPFN_GETACCEPTEXSOCKADDRS)
                       (PVOID lpOutputBuffer,
                        DWORD dwReceiveDataLength,
                        DWORD dwLocalAddressLength,
@@ -131,13 +131,13 @@ typedef intptr_t ssize_t;
                        LPSOCKADDR* RemoteSockaddr,
                        LPINT RemoteSockaddrLength);
 
-  typedef BOOL PASCAL (*LPFN_DISCONNECTEX)
+  typedef BOOL (PASCAL *LPFN_DISCONNECTEX)
                       (SOCKET hSocket,
                        LPOVERLAPPED lpOverlapped,
                        DWORD dwFlags,
                        DWORD reserved);
 
-  typedef BOOL PASCAL (*LPFN_TRANSMITFILE)
+  typedef BOOL (PASCAL *LPFN_TRANSMITFILE)
                       (SOCKET hSocket,
                        HANDLE hFile,
                        DWORD nNumberOfBytesToWrite,
@@ -230,6 +230,12 @@ typedef union {
     HANDLE broadcast_event;
   } fallback;
 } uv_cond_t;
+
+
+//http://blog.csdn.net/xiewneqi/article/details/4787156
+typedef struct SRWLOCK {
+	void* ptr;
+} SRWLOCK, *PSRWLOCK;
 
 typedef union {
   /* srwlock_ has type SRWLOCK, but not all toolchains define this type in */

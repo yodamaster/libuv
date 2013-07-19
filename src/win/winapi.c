@@ -51,7 +51,10 @@ sSleepConditionVariableCS pSleepConditionVariableCS;
 sSleepConditionVariableSRW pSleepConditionVariableSRW;
 sWakeAllConditionVariable pWakeAllConditionVariable;
 sWakeConditionVariable pWakeConditionVariable;
-
+sUnregisterWait pUnregisterWait;
+sUnregisterWaitEx pUnregisterWaitEx;
+sRegisterWaitForSingleObject pRegisterWaitForSingleObject;
+sGlobalMemoryStatusEx pGlobalMemoryStatusEx;
 
 void uv_winapi_init() {
   HMODULE ntdll_module;
@@ -156,4 +159,17 @@ void uv_winapi_init() {
 
   pWakeConditionVariable = (sWakeConditionVariable)
     GetProcAddress(kernel32_module, "WakeConditionVariable");
+
+  pUnregisterWait = (sUnregisterWait)
+    GetProcAddress(kernel32_module, "UnregisterWait");
+
+  pUnregisterWaitEx = (sUnregisterWaitEx)
+    GetProcAddress(kernel32_module, "UnregisterWaitEx");
+
+  pRegisterWaitForSingleObject = (sRegisterWaitForSingleObject)
+    GetProcAddress(kernel32_module, "RegisterWaitForSingleObject");
+
+  pGlobalMemoryStatusEx = (sGlobalMemoryStatusEx)
+    GetProcAddress(kernel32_module, "GlobalMemoryStatusEx");
+
 }

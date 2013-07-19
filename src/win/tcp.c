@@ -374,7 +374,7 @@ static void uv_tcp_queue_accept(uv_tcp_t* handle, uv_tcp_accept_t* req) {
   /* Prepare the overlapped structure. */
   memset(&(req->overlapped), 0, sizeof(req->overlapped));
   if (handle->flags & UV_HANDLE_EMULATE_IOCP) {
-    req->overlapped.hEvent = (HANDLE) ((ULONG_PTR) req->event_handle | 1);
+    req->overlapped.hEvent = (HANDLE) ((DWORD) req->event_handle | 1); 
   }
 
   success = handle->func_acceptex(handle->socket,
@@ -456,7 +456,7 @@ static void uv_tcp_queue_read(uv_loop_t* loop, uv_tcp_t* handle) {
   memset(&(req->overlapped), 0, sizeof(req->overlapped));
   if (handle->flags & UV_HANDLE_EMULATE_IOCP) {
     assert(req->event_handle);
-    req->overlapped.hEvent = (HANDLE) ((ULONG_PTR) req->event_handle | 1);
+    req->overlapped.hEvent = (HANDLE) ((DWORD) req->event_handle | 1);
   }
 
   flags = 0;
@@ -811,7 +811,7 @@ int uv_tcp_write(uv_loop_t* loop,
     if (!req->event_handle) {
       uv_fatal_error(GetLastError(), "CreateEvent");
     }
-    req->overlapped.hEvent = (HANDLE) ((ULONG_PTR) req->event_handle | 1);
+    req->overlapped.hEvent = (HANDLE) ((DWORD) req->event_handle | 1);
     req->wait_handle = INVALID_HANDLE_VALUE;
   }
 
@@ -840,7 +840,7 @@ int uv_tcp_write(uv_loop_t* loop,
     if (handle->flags & UV_HANDLE_EMULATE_IOCP &&
         !RegisterWaitForSingleObject(&req->wait_handle,
           req->event_handle, post_write_completion, (void*) req,
-          INFINITE, WT_EXECUTEINWAITTHREAD | WT_EXECUTEONLYONCE)) {
+          INFINITE, WT_EXECUTEINWAITTHREAD | 0x00000008/*WT_EXECUTEONLYONCE*/)) {
       SET_REQ_ERROR(req, GetLastError());
       uv_insert_pending_req(loop, (uv_req_t*)req);
     }

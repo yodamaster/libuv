@@ -23,7 +23,7 @@
 #define UV_WIN_WINSOCK_H_
 
 #include <winsock2.h>
-#include <iptypes.h>
+#include "Iphlpapi/iptypes.h"
 #include <mswsock.h>
 #include <ws2tcpip.h>
 #include <windows.h>

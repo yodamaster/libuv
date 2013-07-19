@@ -65,6 +65,9 @@ static int inet_ntop4(const unsigned char *src, char *dst, size_t size) {
   return 0;
 }
 
+struct in6_addr {
+  unsigned char s6_addr[16];
+};
 
 static int inet_ntop6(const unsigned char *src, char *dst, size_t size) {
   /*

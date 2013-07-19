@@ -213,7 +213,7 @@ static int uv_udp_maybe_bind(uv_udp_t* handle,
     /* available, or when run on XP/2003 which have no support for dualstack */
     /* sockets. For now we're silently ignoring the error. */
     setsockopt(handle->socket,
-               IPPROTO_IPV6,
+               41/*IPPROTO_IPV6*/,
                IPV6_V6ONLY,
                (char*) &no,
                sizeof no);
@@ -800,7 +800,7 @@ int uv_udp_open(uv_udp_t* handle, uv_os_sock_t sock) {
     } else {                                                                  \
       /* Set IPv6 socket option */                                            \
       if (setsockopt(handle->socket,                                          \
-                     IPPROTO_IPV6,                                            \
+                     41/*IPPROTO_IPV6*/,                                      \
                      option6,                                                 \
                      (char*) &optval,                                         \
                      sizeof optval)) {                                        \
@@ -820,11 +820,11 @@ SOCKOPT_SETTER(ttl,
                VALIDATE_TTL)
 SOCKOPT_SETTER(multicast_ttl,
                IP_MULTICAST_TTL,
-               IPV6_MULTICAST_HOPS,
+               10/*IPV6_MULTICAST_HOPS*/,
                VALIDATE_MULTICAST_TTL)
 SOCKOPT_SETTER(multicast_loop,
                IP_MULTICAST_LOOP,
-               IPV6_MULTICAST_LOOP,
+               11/*IPV6_MULTICAST_LOOP*/,
                VALIDATE_MULTICAST_LOOP)
 
 #undef SOCKOPT_SETTER

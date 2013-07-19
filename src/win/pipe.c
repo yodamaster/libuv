@@ -183,7 +183,7 @@ int uv_stdio_pipe_server(uv_loop_t* loop, uv_pipe_t* handle, DWORD access,
     uv_unique_pipe_name(ptr, name, nameSize);
 
     pipeHandle = CreateNamedPipeA(name,
-      access | FILE_FLAG_OVERLAPPED | FILE_FLAG_FIRST_PIPE_INSTANCE,
+      access | FILE_FLAG_OVERLAPPED | 0x00080000/*FILE_FLAG_FIRST_PIPE_INSTANCE*/,
       PIPE_TYPE_BYTE | PIPE_READMODE_BYTE | PIPE_WAIT, 1, 65536, 65536, 0,
       NULL);
 
@@ -373,7 +373,7 @@ void uv_pipe_endgame(uv_loop_t* loop, uv_pipe_t* handle) {
     /* Run FlushFileBuffers in the thread pool. */
     result = QueueUserWorkItem(pipe_shutdown_thread_proc,
                                req,
-                               WT_EXECUTELONGFUNCTION);
+                               0x00000010/*WT_EXECUTELONGFUNCTION*/);
     if (result) {
       return;
 
@@ -500,7 +500,7 @@ int uv_pipe_bind(uv_pipe_t* handle, const char* name) {
    */
   handle->accept_reqs[0].pipeHandle = CreateNamedPipeW(handle->name,
       PIPE_ACCESS_DUPLEX | FILE_FLAG_OVERLAPPED |
-      FILE_FLAG_FIRST_PIPE_INSTANCE,
+      0x00080000/*FILE_FLAG_FIRST_PIPE_INSTANCE*/,
       PIPE_TYPE_BYTE | PIPE_READMODE_BYTE | PIPE_WAIT,
       PIPE_UNLIMITED_INSTANCES, 65536, 65536, 0, NULL);
 
@@ -610,7 +610,7 @@ void uv_pipe_connect(uv_connect_t* req, uv_pipe_t* handle,
       /* Wait for the server to make a pipe instance available. */
       if (!QueueUserWorkItem(&pipe_connect_thread_proc,
                              req,
-                             WT_EXECUTELONGFUNCTION)) {
+                             0x00000010/*WT_EXECUTELONGFUNCTION*/)) {
         err = GetLastError();
         goto error;
       }
@@ -968,7 +968,7 @@ static void uv_pipe_queue_read(uv_loop_t* loop, uv_pipe_t* handle) {
   if (handle->flags & UV_HANDLE_NON_OVERLAPPED_PIPE) {
     if (!QueueUserWorkItem(&uv_pipe_zero_readfile_thread_proc,
                            req,
-                           WT_EXECUTELONGFUNCTION)) {
+                           0x00000010/*WT_EXECUTELONGFUNCTION*/)) {
       /* Make this req pending reporting an error. */
       SET_REQ_ERROR(req, GetLastError());
       goto error;
@@ -1083,7 +1083,7 @@ static void uv_queue_non_overlapped_write(uv_pipe_t* handle) {
   if (req) {
     if (!QueueUserWorkItem(&uv_pipe_writefile_thread_proc,
                            req,
-                           WT_EXECUTELONGFUNCTION)) {
+                           0x00000010/*WT_EXECUTELONGFUNCTION*/)) {
       uv_fatal_error(GetLastError(), "QueueUserWorkItem");
     }
   }

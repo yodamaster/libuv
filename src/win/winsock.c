@@ -69,7 +69,7 @@ BOOL uv_get_acceptex_function(SOCKET socket, LPFN_ACCEPTEX* target) {
 
 
 BOOL uv_get_connectex_function(SOCKET socket, LPFN_CONNECTEX* target) {
-  const GUID wsaid_connectex = WSAID_CONNECTEX;
+  const GUID wsaid_connectex = {0x25a207b9,0xddf3,0x4660,{0x8e,0xe9,0x76,0xe5,0x8c,0x74,0x06,0x3e}}/*WSAID_CONNECTEX*/;
   return uv_get_extension_function(socket, wsaid_connectex, (void**)target);
 }
 

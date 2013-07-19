@@ -4110,7 +4110,7 @@
 
 /* from ntifs.h */
 /* MinGW already has it, mingw-w64 does not. */
-#if defined(_MSC_VER) || defined(__MINGW64_VERSION_MAJOR)
+#if /*defined(_MSC_VER) ||*/ defined(__MINGW64_VERSION_MAJOR)
   typedef struct _REPARSE_DATA_BUFFER {
     ULONG  ReparseTag;
     USHORT ReparseDataLength;
@@ -4137,6 +4137,8 @@
     } DUMMYUNIONNAME;
   } REPARSE_DATA_BUFFER, *PREPARSE_DATA_BUFFER;
 #endif
+
+typedef unsigned int* ULONG_PTR;
 
 typedef struct _IO_STATUS_BLOCK {
   union {
@@ -4555,6 +4557,13 @@ typedef NTSTATUS (NTAPI *sNtQuerySystemInformation)
 # define ERROR_SYMLINK_NOT_SUPPORTED 1464
 #endif
 
+typedef struct _OVERLAPPED_ENTRY {
+  ULONG_PTR    lpCompletionKey;
+  LPOVERLAPPED lpOverlapped;
+  ULONG_PTR    Internal;
+  DWORD        dwNumberOfBytesTransferred;
+} OVERLAPPED_ENTRY, *LPOVERLAPPED_ENTRY;
+
 typedef BOOL (WINAPI *sGetQueuedCompletionStatusEx)
              (HANDLE CompletionPort,
               LPOVERLAPPED_ENTRY lpCompletionPortEntries,
@@ -4617,6 +4626,31 @@ typedef VOID (WINAPI* sWakeAllConditionVariable)
 typedef VOID (WINAPI* sWakeConditionVariable)
              (PCONDITION_VARIABLE ConditionVariable);
 
+typedef BOOL (WINAPI* sUnregisterWait) (HANDLE WaitHandle);
+
+typedef BOOL (WINAPI* sUnregisterWaitEx) (HANDLE WaitHandle, HANDLE CompletionEvent);
+
+typedef VOID (CALLBACK* WAITORTIMERCALLBACK) (PVOID lpParameter, BOOLEAN TimerOrWaitFired);
+typedef BOOL (WINAPI* sRegisterWaitForSingleObject)
+             (PHANDLE phNewWaitObject,
+              HANDLE hObject,
+              WAITORTIMERCALLBACK Callback,
+              PVOID Context,
+              ULONG dwMilliseconds,
+              ULONG dwFlags);
+
+typedef struct _MEMORYSTATUSEX {
+  DWORD     dwLength;
+  DWORD     dwMemoryLoad;
+  DWORDLONG ullTotalPhys;
+  DWORDLONG ullAvailPhys;
+  DWORDLONG ullTotalPageFile;
+  DWORDLONG ullAvailPageFile;
+  DWORDLONG ullTotalVirtual;
+  DWORDLONG ullAvailVirtual;
+  DWORDLONG ullAvailExtendedVirtual;
+} MEMORYSTATUSEX, *LPMEMORYSTATUSEX;
+typedef BOOL (WINAPI* sGlobalMemoryStatusEx) (LPMEMORYSTATUSEX lpBuffer);
 
 /* Ntdll function pointers */
 extern sRtlNtStatusToDosError pRtlNtStatusToDosError;
@@ -4644,5 +4678,9 @@ extern sSleepConditionVariableCS pSleepConditionVariableCS;
 extern sSleepConditionVariableSRW pSleepConditionVariableSRW;
 extern sWakeAllConditionVariable pWakeAllConditionVariable;
 extern sWakeConditionVariable pWakeConditionVariable;
+extern sUnregisterWait pUnregisterWait;
+extern sUnregisterWaitEx pUnregisterWaitEx;
+extern sRegisterWaitForSingleObject pRegisterWaitForSingleObject;
+extern sGlobalMemoryStatusEx pGlobalMemoryStatusEx;
 
 #endif /* UV_WIN_WINAPI_H_ */

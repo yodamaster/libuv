@@ -75,7 +75,7 @@ inline static int uv_cond_condvar_timedwait(uv_cond_t* cond,
     uv_mutex_t* mutex, uint64_t timeout);
 
 
-static NOINLINE void uv__once_inner(uv_once_t* guard,
+static /*NOINLINE*/ void uv__once_inner(uv_once_t* guard,
     void (*callback)(void)) {
   DWORD result;
   HANDLE existing_event, created_event;
@@ -601,13 +601,13 @@ void uv_cond_wait(uv_cond_t* cond, uv_mutex_t* mutex) {
 
 inline static int uv_cond_fallback_timedwait(uv_cond_t* cond,
     uv_mutex_t* mutex, uint64_t timeout) {
-  return uv_cond_wait_helper(cond, mutex, (DWORD)(timeout / 1e6));
+  return uv_cond_wait_helper(cond, mutex, (DWORD)((__int64)timeout / 1e6));
 }
 
 
 inline static int uv_cond_condvar_timedwait(uv_cond_t* cond,
     uv_mutex_t* mutex, uint64_t timeout) {
-  if (pSleepConditionVariableCS(&cond->cond_var, mutex, (DWORD)(timeout / 1e6)))
+  if (pSleepConditionVariableCS(&cond->cond_var, mutex, (DWORD)((__int64)timeout / 1e6)))
     return 0;
   if (GetLastError() != ERROR_TIMEOUT)
     abort();
