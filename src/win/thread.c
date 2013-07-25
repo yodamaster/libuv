@@ -86,7 +86,7 @@ static /*NOINLINE*/ void uv__once_inner(uv_once_t* guard,
     uv_fatal_error(GetLastError(), "CreateEvent");
   }
 
-  existing_event = InterlockedCompareExchangePointer(&guard->event,
+  existing_event = pInterlockedCompareExchangePointer(&guard->event,
                                                      created_event,
                                                      NULL);
 

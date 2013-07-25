@@ -371,7 +371,7 @@ void uv_pipe_endgame(uv_loop_t* loop, uv_pipe_t* handle) {
     }
 
     /* Run FlushFileBuffers in the thread pool. */
-    result = QueueUserWorkItem(pipe_shutdown_thread_proc,
+    result = pQueueUserWorkItem(pipe_shutdown_thread_proc,
                                req,
                                0x00000010/*WT_EXECUTELONGFUNCTION*/);
     if (result) {
@@ -422,7 +422,7 @@ void uv_pipe_endgame(uv_loop_t* loop, uv_pipe_t* handle) {
 
       if (handle->flags & UV_HANDLE_EMULATE_IOCP) {
         if (handle->read_req.wait_handle != INVALID_HANDLE_VALUE) {
-          UnregisterWait(handle->read_req.wait_handle);
+          pUnregisterWait(handle->read_req.wait_handle);
           handle->read_req.wait_handle = INVALID_HANDLE_VALUE;
         }
         if (handle->read_req.event_handle) {
@@ -608,7 +608,7 @@ void uv_pipe_connect(uv_connect_t* req, uv_pipe_t* handle,
   if (pipeHandle == INVALID_HANDLE_VALUE) {
     if (GetLastError() == ERROR_PIPE_BUSY) {
       /* Wait for the server to make a pipe instance available. */
-      if (!QueueUserWorkItem(&pipe_connect_thread_proc,
+      if (!pQueueUserWorkItem(&pipe_connect_thread_proc,
                              req,
                              0x00000010/*WT_EXECUTELONGFUNCTION*/)) {
         err = GetLastError();
@@ -966,7 +966,7 @@ static void uv_pipe_queue_read(uv_loop_t* loop, uv_pipe_t* handle) {
   req = &handle->read_req;
 
   if (handle->flags & UV_HANDLE_NON_OVERLAPPED_PIPE) {
-    if (!QueueUserWorkItem(&uv_pipe_zero_readfile_thread_proc,
+    if (!pQueueUserWorkItem(&uv_pipe_zero_readfile_thread_proc,
                            req,
                            0x00000010/*WT_EXECUTELONGFUNCTION*/)) {
       /* Make this req pending reporting an error. */
@@ -1000,7 +1000,7 @@ static void uv_pipe_queue_read(uv_loop_t* loop, uv_pipe_t* handle) {
         }
       }
       if (req->wait_handle == INVALID_HANDLE_VALUE) {
-        if (!RegisterWaitForSingleObject(&req->wait_handle,
+        if (!pRegisterWaitForSingleObject(&req->wait_handle,
             req->overlapped.hEvent, post_completion_read_wait, (void*) req,
             INFINITE, WT_EXECUTEINWAITTHREAD)) {
           SET_REQ_ERROR(req, GetLastError());
@@ -1081,7 +1081,7 @@ static uv_write_t* uv_remove_non_overlapped_write_req(uv_pipe_t* handle) {
 static void uv_queue_non_overlapped_write(uv_pipe_t* handle) {
   uv_write_t* req = uv_remove_non_overlapped_write_req(handle);
   if (req) {
-    if (!QueueUserWorkItem(&uv_pipe_writefile_thread_proc,
+    if (!pQueueUserWorkItem(&uv_pipe_writefile_thread_proc,
                            req,
                            0x00000010/*WT_EXECUTELONGFUNCTION*/)) {
       uv_fatal_error(GetLastError(), "QueueUserWorkItem");
@@ -1320,7 +1320,7 @@ static int uv_pipe_write_impl(uv_loop_t* loop,
       if (!req->event_handle) {
         uv_fatal_error(GetLastError(), "CreateEvent");
       }
-      if (!RegisterWaitForSingleObject(&req->wait_handle,
+      if (!pRegisterWaitForSingleObject(&req->wait_handle,
           req->overlapped.hEvent, post_completion_write_wait, (void*) req,
           INFINITE, WT_EXECUTEINWAITTHREAD)) {
         return GetLastError();
@@ -1557,7 +1557,7 @@ void uv_process_pipe_write_req(uv_loop_t* loop, uv_pipe_t* handle,
 
   if (handle->flags & UV_HANDLE_EMULATE_IOCP) {
     if (req->wait_handle != INVALID_HANDLE_VALUE) {
-      UnregisterWait(req->wait_handle);
+      pUnregisterWait(req->wait_handle);
       req->wait_handle = INVALID_HANDLE_VALUE;
     }
     if (req->event_handle) {

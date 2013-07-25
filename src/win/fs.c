@@ -44,7 +44,7 @@
 
 #define QUEUE_FS_TP_JOB(loop, req)                                          \
   do {                                                                      \
-    if (!QueueUserWorkItem(&uv_fs_thread_proc,                              \
+    if (!pQueueUserWorkItem(&uv_fs_thread_proc,                              \
                            req,                                             \
                            WT_EXECUTEDEFAULT)) {                            \
       return uv_translate_sys_error(GetLastError());                        \

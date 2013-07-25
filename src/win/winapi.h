@@ -23,7 +23,8 @@
 #define UV_WIN_WINAPI_H_
 
 #include <windows.h>
-
+#include "psapi/psapi.h"
+#include "Iphlpapi/IPTypes.h"
 
 /*
  * Ntdll headers
@@ -4640,17 +4641,49 @@ typedef BOOL (WINAPI* sRegisterWaitForSingleObject)
               ULONG dwFlags);
 
 typedef struct _MEMORYSTATUSEX {
-  DWORD     dwLength;
-  DWORD     dwMemoryLoad;
-  DWORDLONG ullTotalPhys;
-  DWORDLONG ullAvailPhys;
-  DWORDLONG ullTotalPageFile;
-  DWORDLONG ullAvailPageFile;
-  DWORDLONG ullTotalVirtual;
-  DWORDLONG ullAvailVirtual;
-  DWORDLONG ullAvailExtendedVirtual;
+	DWORD     dwLength;
+	DWORD     dwMemoryLoad;
+	DWORDLONG ullTotalPhys;
+	DWORDLONG ullAvailPhys;
+	DWORDLONG ullTotalPageFile;
+	DWORDLONG ullAvailPageFile;
+	DWORDLONG ullTotalVirtual;
+	DWORDLONG ullAvailVirtual;
+	DWORDLONG ullAvailExtendedVirtual;
 } MEMORYSTATUSEX, *LPMEMORYSTATUSEX;
 typedef BOOL (WINAPI* sGlobalMemoryStatusEx) (LPMEMORYSTATUSEX lpBuffer);
+
+typedef BOOL (WINAPI* sQueueUserWorkItem)
+             (LPTHREAD_START_ROUTINE Function,
+              PVOID Context,
+              ULONG Flags);
+
+typedef BOOL (WINAPI* sGetProcessMemoryInfo)
+             (HANDLE Process,
+              PPROCESS_MEMORY_COUNTERS ppsmemCounters,
+              DWORD cb);
+
+typedef ULONG (WINAPI* sGetAdaptersAddresses)
+              (ULONG Family,
+               ULONG Flags,
+               PVOID Reserved,
+               PIP_ADAPTER_ADDRESSES AdapterAddresses,
+               PULONG SizePointer);
+
+typedef PVOID (__cdecl* sInterlockedCompareExchangePointer)
+              (PVOID volatile *Destination,
+               PVOID Exchange,
+               PVOID Comparand);
+
+typedef void (WSAAPI* sFreeAddrInfoW)
+             (PADDRINFOW pAddrInfo);
+
+typedef int (WSAAPI* sGetAddrInfoW)
+            (PCWSTR pNodeName,
+             PCWSTR pServiceName,
+             const ADDRINFOW *pHints,
+             PADDRINFOW *ppResult);
+
 
 /* Ntdll function pointers */
 extern sRtlNtStatusToDosError pRtlNtStatusToDosError;
@@ -4682,5 +4715,11 @@ extern sUnregisterWait pUnregisterWait;
 extern sUnregisterWaitEx pUnregisterWaitEx;
 extern sRegisterWaitForSingleObject pRegisterWaitForSingleObject;
 extern sGlobalMemoryStatusEx pGlobalMemoryStatusEx;
+extern sQueueUserWorkItem pQueueUserWorkItem;
+extern sGetProcessMemoryInfo pGetProcessMemoryInfo;
+extern sGetAdaptersAddresses pGetAdaptersAddresses;
+extern sInterlockedCompareExchangePointer pInterlockedCompareExchangePointer;
+extern sFreeAddrInfoW pFreeAddrInfoW;
+extern sGetAddrInfoW pGetAddrInfoW;
 
 #endif /* UV_WIN_WINAPI_H_ */

@@ -397,7 +397,7 @@ static void uv__slow_poll_submit_poll_req(uv_loop_t* loop, uv_poll_t* handle) {
     return;
   }
 
-  if (!QueueUserWorkItem(uv__slow_poll_thread_proc,
+  if (!pQueueUserWorkItem(uv__slow_poll_thread_proc,
                          (void*) req,
                          0x00000010/*WT_EXECUTELONGFUNCTION*/)) {
     /* Make this req pending, reporting an error. */

@@ -55,6 +55,12 @@ sUnregisterWait pUnregisterWait;
 sUnregisterWaitEx pUnregisterWaitEx;
 sRegisterWaitForSingleObject pRegisterWaitForSingleObject;
 sGlobalMemoryStatusEx pGlobalMemoryStatusEx;
+sQueueUserWorkItem pQueueUserWorkItem;
+sGetProcessMemoryInfo pGetProcessMemoryInfo;
+sGetAdaptersAddresses pGetAdaptersAddresses;
+sInterlockedCompareExchangePointer pInterlockedCompareExchangePointer;
+sFreeAddrInfoW pFreeAddrInfoW;
+sGetAddrInfoW pGetAddrInfoW;
 
 void uv_winapi_init() {
   HMODULE ntdll_module;
@@ -171,5 +177,29 @@ void uv_winapi_init() {
 
   pGlobalMemoryStatusEx = (sGlobalMemoryStatusEx)
     GetProcAddress(kernel32_module, "GlobalMemoryStatusEx");
+
+  pQueueUserWorkItem = (sQueueUserWorkItem)
+    GetProcAddress(kernel32_module, "QueueUserWorkItem");
+
+  //http://msdn.microsoft.com/en-us/library/windows/desktop/ms683219(v=vs.85).aspx
+  pGetProcessMemoryInfo = (sGetProcessMemoryInfo)
+    GetProcAddress(kernel32_module, "GetProcessMemoryInfo");
+  if(pGetProcessMemoryInfo == NULL) {
+    pGetProcessMemoryInfo = (sGetProcessMemoryInfo)
+      GetProcAddress(GetModuleHandleA("Psapi.dll"), "GetProcessMemoryInfo");
+  }
+
+  pGetAdaptersAddresses = (sGetAdaptersAddresses)
+    GetProcAddress(GetModuleHandleA("Iphlpapi.dll"), "GetAdaptersAddresses");
+
+  pInterlockedCompareExchangePointer = (sInterlockedCompareExchangePointer)
+    GetProcAddress(kernel32_module, "InterlockedCompareExchangePointer");
+  assert(pInterlockedCompareExchangePointer);
+
+  pFreeAddrInfoW = (sFreeAddrInfoW)
+    GetProcAddress(GetModuleHandleA("Ws2_32.dll"), "FreeAddrInfoW");
+
+  pGetAddrInfoW = (sGetAddrInfoW)
+    GetProcAddress(GetModuleHandleA("Ws2_32.dll"), "GetAddrInfoW");
 
 }

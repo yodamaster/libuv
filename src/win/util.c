@@ -497,7 +497,7 @@ int uv_resident_set_memory(size_t* rss) {
 
   current_process = GetCurrentProcess();
 
-  if (!GetProcessMemoryInfo(current_process, &pmc, sizeof(pmc))) {
+  if (!pGetProcessMemoryInfo(current_process, &pmc, sizeof(pmc))) {
     return uv_translate_sys_error(GetLastError());
   }
 
@@ -804,7 +804,7 @@ int uv_interface_addresses(uv_interface_address_t** addresses_ptr,
     /* If win_address_buf is 0, then GetAdaptersAddresses will fail with */
     /* ERROR_BUFFER_OVERFLOW, and the required buffer size will be stored in */
     /* win_address_buf_size. */
-    r = GetAdaptersAddresses(AF_UNSPEC,
+    r = pGetAdaptersAddresses(AF_UNSPEC,
                              GAA_FLAG_INCLUDE_PREFIX,
                              NULL,
                              win_address_buf,

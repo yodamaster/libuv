@@ -65,7 +65,7 @@ static DWORD WINAPI getaddrinfo_thread_proc(void* parameter) {
   assert(req != NULL);
 
   /* call OS function on this thread */
-  ret = GetAddrInfoW(req->node,
+  ret = pGetAddrInfoW(req->node,
                      req->service,
                      req->hints,
                      &req->res);
@@ -188,7 +188,7 @@ void uv_process_getaddrinfo_req(uv_loop_t* loop, uv_getaddrinfo_t* req) {
 
   /* return memory to system */
   if (req->res != NULL) {
-    FreeAddrInfoW(req->res);
+    pFreeAddrInfoW(req->res);
     req->res = NULL;
   }
 
@@ -325,7 +325,7 @@ int uv_getaddrinfo(uv_loop_t* loop,
   }
 
   /* Ask thread to run. Treat this as a long operation */
-  if (QueueUserWorkItem(&getaddrinfo_thread_proc,
+  if (pQueueUserWorkItem(&getaddrinfo_thread_proc,
                         req,
                         0x00000010/*WT_EXECUTELONGFUNCTION*/) == 0) {
     err = GetLastError();

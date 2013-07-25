@@ -259,7 +259,7 @@ static void CALLBACK uv_tty_post_raw_read(void* data, BOOLEAN didTimeout) {
   handle = (uv_tty_t*) req->data;
   loop = handle->loop;
 
-  UnregisterWait(handle->read_raw_wait);
+  pUnregisterWait(handle->read_raw_wait);
   handle->read_raw_wait = NULL;
 
   SET_REQ_SUCCESS(req);
@@ -281,7 +281,7 @@ static void uv_tty_queue_read_raw(uv_loop_t* loop, uv_tty_t* handle) {
   req = &handle->read_req;
   memset(&req->overlapped, 0, sizeof(req->overlapped));
 
-  r = RegisterWaitForSingleObject(&handle->read_raw_wait,
+  r = pRegisterWaitForSingleObject(&handle->read_raw_wait,
                                   handle->handle,
                                   uv_tty_post_raw_read,
                                   (void*) req,
@@ -376,7 +376,7 @@ static void uv_tty_queue_read_line(uv_loop_t* loop, uv_tty_t* handle) {
     }
   }
 
-  r = QueueUserWorkItem(uv_tty_line_read_thread,
+  r = pQueueUserWorkItem(uv_tty_line_read_thread,
                         (void*) req,
                         0x00000010/*WT_EXECUTELONGFUNCTION*/);
   if (!r) {
