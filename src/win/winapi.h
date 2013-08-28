@@ -4670,10 +4670,18 @@ typedef ULONG (WINAPI* sGetAdaptersAddresses)
                PIP_ADAPTER_ADDRESSES AdapterAddresses,
                PULONG SizePointer);
 
-typedef PVOID (__cdecl* sInterlockedCompareExchangePointer)
+typedef PVOID (WINAPI* sInterlockedCompareExchangePointer)
               (PVOID volatile *Destination,
                PVOID Exchange,
                PVOID Comparand);
+typedef LONG (WINAPI* sInterlockedCompareExchange32)
+             (LONG volatile *Destination,
+              LONG Exchange,
+              LONG Comparand);
+typedef LONGLONG (WINAPI* sInterlockedCompareExchange64)
+                 (LONGLONG volatile *Destination,
+                  LONGLONG Exchange,
+                  LONGLONG Comparand);
 
 typedef void (WSAAPI* sFreeAddrInfoW)
              (PADDRINFOW pAddrInfo);
@@ -4719,6 +4727,8 @@ extern sQueueUserWorkItem pQueueUserWorkItem;
 extern sGetProcessMemoryInfo pGetProcessMemoryInfo;
 extern sGetAdaptersAddresses pGetAdaptersAddresses;
 extern sInterlockedCompareExchangePointer pInterlockedCompareExchangePointer;
+extern sInterlockedCompareExchange32 pInterlockedCompareExchange32;
+extern sInterlockedCompareExchange64 pInterlockedCompareExchange64;
 extern sFreeAddrInfoW pFreeAddrInfoW;
 extern sGetAddrInfoW pGetAddrInfoW;
 

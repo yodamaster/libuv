@@ -106,6 +106,22 @@ static int uv_split_path(const WCHAR* filename, WCHAR** dir,
   return 0;
 }
 
+static void* _aligned_malloc(unsigned int size, unsigned int align) {
+  unsigned int rem;
+  unsigned char *op, *np;
+  op = (unsigned char*) malloc(size + align);
+  if(op == NULL) return NULL;
+  rem = (unsigned int)op % align;
+  np = op + align - rem;
+  *(np-1) = (unsigned char)align - rem;
+  return np;
+}
+static void _aligned_free(void* p) {
+  if(p) {
+    unsigned char n = *((unsigned char*)p - 1);
+    free((unsigned char*)p - n);
+  }
+}
 
 int uv_fs_event_init(uv_loop_t* loop, uv_fs_event_t* handle) {
   uv__handle_init(loop, (uv_handle_t*) handle, UV_FS_EVENT);

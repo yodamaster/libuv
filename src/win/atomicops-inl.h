@@ -32,10 +32,14 @@
 /* efficient than InterlockedExchange, but InterlockedExchange8 does not */
 /* exist, and interlocked operations on larger targets might require the */
 /* target to be aligned. */
-#pragma intrinsic(_InterlockedOr8)
+//#pragma intrinsic(_InterlockedOr8)
 
 static char __declspec(inline) uv__atomic_exchange_set(char volatile* target) {
-  return _InterlockedOr8(target, 1);
+  //return _InterlockedOr8(target, 1);
+  //__asm xor eax, eax
+  __asm mov ecx, target
+  __asm mov al, byte ptr [ecx]
+  __asm lock or byte ptr [ecx], 1
 }
 
 #else /* GCC */

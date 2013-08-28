@@ -86,6 +86,10 @@ static /*NOINLINE*/ void uv__once_inner(uv_once_t* guard,
     uv_fatal_error(GetLastError(), "CreateEvent");
   }
 
+  //liigo 2013-8-28
+  if(pInterlockedCompareExchangePointer == NULL) {
+    uv_winapi_init(); /*to ensure we can use pInterlockedCompareExchangePointer()*/
+  }
   existing_event = pInterlockedCompareExchangePointer(&guard->event,
                                                      created_event,
                                                      NULL);

@@ -1316,6 +1316,31 @@ static int uv_tty_restore_state(uv_tty_t* handle,
   return 0;
 }
 
+//http://stackoverflow.com/questions/355967/how-to-use-msvc-intrinsics-to-get-the-equivalent-of-this-gcc-code
+#ifndef __GNUC__
+static unsigned int __declspec(inline) popcnt( unsigned int x )
+{
+    x -= ((x >> 1) & 0x55555555);
+    x = (((x >> 2) & 0x33333333) + (x & 0x33333333));
+    x = (((x >> 4) + x) & 0x0f0f0f0f);
+    x += (x >> 8);
+    x += (x >> 16);
+    return x & 0x0000003f;
+}
+static unsigned int __declspec(inline) __builtin_clz( unsigned int x )
+{
+    x |= (x >> 1);
+    x |= (x >> 2);
+    x |= (x >> 4);
+    x |= (x >> 8);
+    x |= (x >> 16);
+    return 32 - popcnt(x);
+}
+static unsigned int __declspec(inline) __builtin_ctz( unsigned int x )
+{
+    return popcnt((x & -x) - 1);
+}
+#endif
 
 static int uv_tty_write_bufs(uv_tty_t* handle,
                              const uv_buf_t bufs[],
@@ -1362,12 +1387,8 @@ static int uv_tty_write_bufs(uv_tty_t* handle,
         /* Read utf-8 start byte */
         DWORD first_zero_bit;
         unsigned char not_c = ~c;
-#ifdef _MSC_VER /* msvc */
-        if (_BitScanReverse(&first_zero_bit, not_c)) {
-#else /* assume gcc */
         if (c != 0) {
           first_zero_bit = (sizeof(int) * 8) - 1 - __builtin_clz(not_c);
-#endif
           if (first_zero_bit == 7) {
             /* Ascii - pass right through */
             utf8_codepoint = (unsigned int) c;

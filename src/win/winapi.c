@@ -58,9 +58,22 @@ sGlobalMemoryStatusEx pGlobalMemoryStatusEx;
 sQueueUserWorkItem pQueueUserWorkItem;
 sGetProcessMemoryInfo pGetProcessMemoryInfo;
 sGetAdaptersAddresses pGetAdaptersAddresses;
-sInterlockedCompareExchangePointer pInterlockedCompareExchangePointer;
+sInterlockedCompareExchangePointer pInterlockedCompareExchangePointer = NULL;
+sInterlockedCompareExchange32 pInterlockedCompareExchange32;
+sInterlockedCompareExchange64 pInterlockedCompareExchange64;
 sFreeAddrInfoW pFreeAddrInfoW;
 sGetAddrInfoW pGetAddrInfoW;
+
+/*
+static int is_x64 = (sizeof(void*) == 8);
+static PVOID __cdecl InterlockedCompareExchangePointerXLiigo(PVOID volatile *Destination, PVOID Exchange, PVOID Comparand)
+{
+  if(is_x64)
+    return (PVOID) pInterlockedCompareExchange64((LONGLONG volatile*)Destination, (LONGLONG)Exchange, (LONGLONG)Comparand);
+  else
+    return (PVOID) pInterlockedCompareExchange32((LONG volatile*)Destination, (LONG)Exchange, (LONG)Comparand);
+}
+*/
 
 void uv_winapi_init() {
   HMODULE ntdll_module;
@@ -192,9 +205,14 @@ void uv_winapi_init() {
   pGetAdaptersAddresses = (sGetAdaptersAddresses)
     GetProcAddress(GetModuleHandleA("Iphlpapi.dll"), "GetAdaptersAddresses");
 
-  pInterlockedCompareExchangePointer = (sInterlockedCompareExchangePointer)
-    GetProcAddress(kernel32_module, "InterlockedCompareExchangePointer");
-  assert(pInterlockedCompareExchangePointer);
+  //liigo 2013-8-28
+  //InterlockedCompareExchangePointer: This function is implemented using a compiler intrinsic where possible.
+  //http://msdn.microsoft.com/en-us/library/windows/apps/ms683568(v=vs.85).aspx
+  //pInterlockedCompareExchangePointer = (sInterlockedCompareExchangePointer)
+  //  GetProcAddress(kernel32_module, "InterlockedCompareExchangePointer");
+  pInterlockedCompareExchange32  = (sInterlockedCompareExchange32) GetProcAddress(kernel32_module, "InterlockedCompareExchange");
+  pInterlockedCompareExchange64  = (sInterlockedCompareExchange64) GetProcAddress(kernel32_module, "InterlockedCompareExchange64");
+  pInterlockedCompareExchangePointer = (sInterlockedCompareExchangePointer) pInterlockedCompareExchange32; //VC6 always create x86 programs
 
   pFreeAddrInfoW = (sFreeAddrInfoW)
     GetProcAddress(GetModuleHandleA("Ws2_32.dll"), "FreeAddrInfoW");
@@ -203,3 +221,4 @@ void uv_winapi_init() {
     GetProcAddress(GetModuleHandleA("Ws2_32.dll"), "GetAddrInfoW");
 
 }
+
