@@ -41,32 +41,6 @@ shift
 goto next-arg
 :args-done
 
-@rem Look for Visual Studio 2012
-if not defined VS110COMNTOOLS goto vc-set-2010
-if not exist "%VS110COMNTOOLS%\..\..\vc\vcvarsall.bat" goto vc-set-2010
-call "%VS110COMNTOOLS%\..\..\vc\vcvarsall.bat" %vs_toolset%
-set GYP_MSVS_VERSION=2012
-goto select-target
-
-:vc-set-2010
-@rem Look for Visual Studio 2010
-if not defined VS100COMNTOOLS goto vc-set-2008
-if not exist "%VS100COMNTOOLS%\..\..\vc\vcvarsall.bat" goto vc-set-2008
-call "%VS100COMNTOOLS%\..\..\vc\vcvarsall.bat" %vs_toolset%
-set GYP_MSVS_VERSION=2010
-goto select-target
-
-:vc-set-2008
-@rem Look for Visual Studio 2008
-if not defined VS90COMNTOOLS goto vc-set-notfound
-if not exist "%VS90COMNTOOLS%\..\..\vc\vcvarsall.bat" goto vc-set-notfound
-call "%VS90COMNTOOLS%\..\..\vc\vcvarsall.bat" %vs_toolset%
-set GYP_MSVS_VERSION=2008
-goto select-target
-
-:vc-set-notfound
-echo Warning: Visual Studio not found
-
 :select-target
 if not "%config%"=="" goto project-gen
 if "%run%"=="run-tests.exe" set config=Debug& goto project-gen
@@ -91,27 +65,18 @@ exit /b 1
 
 :have_gyp
 if not defined PYTHON set PYTHON="python"
-%PYTHON% gyp_uv -Dtarget_arch=%target_arch% -Dlibrary=%library%
 if errorlevel 1 goto create-msvs-files-failed
-if not exist uv.sln goto create-msvs-files-failed
-echo Project files generated.
 
-:msbuild
-@rem Skip project generation if requested.
-if defined nobuild goto run
+if "%nobuild%"=="1" goto nobuild
+goto build
 
-@rem Check if VS build env is available
-if not defined VCINSTALLDIR goto msbuild-not-found
-goto msbuild-found
-
-:msbuild-not-found
-echo Build skipped. To build, this file needs to run from VS cmd prompt.
+:build
+%PYTHON% gyp_uv -Dtarget_arch=%target_arch% -Dlibrary=%library% --build %config%
 goto run
 
-@rem Build the sln with msbuild.
-:msbuild-found
-msbuild uv.sln /t:%target% /p:Configuration=%config% /p:Platform="%platform%" /clp:NoSummary;NoItemAndPropertyList;Verbosity=minimal /nologo
-if errorlevel 1 exit /b 1
+:nobuild
+%PYTHON% gyp_uv -Dtarget_arch=%target_arch% -Dlibrary=%library% --build %config%
+goto run
 
 :run
 @rem Run tests if requested.
