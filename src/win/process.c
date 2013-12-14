@@ -68,17 +68,6 @@ typedef struct _JOBOBJECT_EXTENDED_LIMIT_INFORMATION {
   SIZE_T                            PeakJobMemoryUsed;
 } JOBOBJECT_EXTENDED_LIMIT_INFORMATION, *PJOBOBJECT_EXTENDED_LIMIT_INFORMATION;
 
-//
-// Job Limit Flags
-//
-#define JOB_OBJECT_LIMIT_SCHEDULING_CLASS       0x80
-#define JOB_OBJECT_LIMIT_PROCESS_MEMORY         0x100
-#define JOB_OBJECT_LIMIT_JOB_MEMORY             0x200
-#define JOB_OBJECT_LIMIT_DIE_ON_UNHANDLED_EXCEPTION 0x400
-#define JOB_OBJECT_LIMIT_BREAKAWAY_OK           0x800
-#define JOB_OBJECT_LIMIT_SILENT_BREAKAWAY_OK    0x1000
-#define JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE      0x2000
-
 static void uv__init_global_job_handle(void) {
   /* Create a job object and set it up to kill all contained processes when
    * it's closed. Since this handle is made non-inheritable and we're not
