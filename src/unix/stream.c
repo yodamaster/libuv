@@ -916,7 +916,7 @@ static void uv__write_callbacks(uv_stream_t* stream) {
 }
 
 
-static uv_handle_type uv__handle_type(int fd) {
+uv_handle_type uv__handle_type(int fd) {
   struct sockaddr_storage ss;
   socklen_t len;
   int type;

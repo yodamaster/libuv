@@ -217,6 +217,7 @@ void uv__tcp_close(uv_tcp_t* handle);
 void uv__timer_close(uv_timer_t* handle);
 void uv__udp_close(uv_udp_t* handle);
 void uv__udp_finish_close(uv_udp_t* handle);
+uv_handle_type uv__handle_type(int fd);
 
 #if defined(__APPLE__)
 int uv___stream_fd(uv_stream_t* handle);

@@ -1155,7 +1155,8 @@ UV_EXTERN void uv_pipe_pending_instances(uv_pipe_t* handle, int count);
  * NOTE: You should call `uv_accept()` from read2_cb anyway, if this function
  * returns 1 - `uv_accept()` may be called for another time.
  */
-UV_EXTERN int uv_pipe_has_pending_handles(uv_pipe_t* handle);
+UV_EXTERN int uv_pipe_has_pending_handles(uv_pipe_t* handle,
+                                          uv_handle_type* type);
 
 
 /*

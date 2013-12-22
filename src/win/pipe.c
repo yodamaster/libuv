@@ -1747,6 +1747,6 @@ int uv_pipe_open(uv_pipe_t* pipe, uv_file file) {
 }
 
 
-int uv_pipe_has_pending_handles(uv_pipe_t* handle) {
+int uv_pipe_has_pending_handles(uv_pipe_t* handle, uv_handle_type* type) {
   return 0;
 }

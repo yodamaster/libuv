@@ -216,6 +216,10 @@ void uv_pipe_pending_instances(uv_pipe_t* handle, int count) {
 }
 
 
-int uv_pipe_has_pending_handles(uv_pipe_t* handle) {
-  return handle->accepted_fd != -1;
+int uv_pipe_has_pending_handles(uv_pipe_t* handle, uv_handle_type* type) {
+  if (handle->accepted_fd == -1)
+    return 0;
+
+  *type = uv__handle_type(handle->accepted_fd);
+  return 1;
 }
