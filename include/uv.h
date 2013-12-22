@@ -1148,6 +1148,15 @@ UV_EXTERN void uv_pipe_connect(uv_connect_t* req, uv_pipe_t* handle,
  */
 UV_EXTERN void uv_pipe_pending_instances(uv_pipe_t* handle, int count);
 
+/*
+ * This call could be used to determine if IPC pipe has any pending handles to
+ * accept.
+ *
+ * NOTE: You should call `uv_accept()` from read2_cb anyway, if this function
+ * returns 1 - `uv_accept()` may be called for another time.
+ */
+UV_EXTERN int uv_pipe_has_pending_handles(uv_pipe_t* handle);
+
 
 /*
  * uv_poll_t is a subclass of uv_handle_t.
