@@ -602,6 +602,9 @@ done:
               server->queued_fds + 3,
               server->queued_fds[0]);
     }
+
+    /* Invoke read_cb one more time */
+    uv__io_feed(server->loop, &server->io_watcher);
   } else {
     server->accepted_fd = -1;
     if (err == 0)
@@ -1012,6 +1015,16 @@ static void uv__read(uv_stream_t* stream) {
   char cmsg_space[64];
   int count;
   int err;
+
+  /* Has queued fds */
+  if (stream->accepted_fd >= 0) {
+    uv_buf_t buf = { NULL, 0 };
+    stream->read2_cb((uv_pipe_t*) stream,
+                     0,
+                     &buf,
+                     uv__handle_type(stream->accepted_fd));
+    return;
+  }
 
   stream->flags &= ~UV_STREAM_READ_PARTIAL;
 

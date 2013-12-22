@@ -376,6 +376,9 @@ typedef void (*uv_read_cb)(uv_stream_t* stream,
  * Just like the uv_read_cb except that if the pending parameter is true
  * then you can use uv_accept() to pull the new handle into the process.
  * If no handle is pending then pending will be UV_UNKNOWN_HANDLE.
+ *
+ * NOTE: The buffer may be a null buffer if multiple fds were accepted and
+ * read2_cb is called for pending ones.
  */
 typedef void (*uv_read2_cb)(uv_pipe_t* pipe,
                             ssize_t nread,
@@ -1147,16 +1150,6 @@ UV_EXTERN void uv_pipe_connect(uv_connect_t* req, uv_pipe_t* handle,
  * is waiting for connections.
  */
 UV_EXTERN void uv_pipe_pending_instances(uv_pipe_t* handle, int count);
-
-/*
- * This call could be used to determine if IPC pipe has any pending handles to
- * accept.
- *
- * NOTE: You should call `uv_accept()` from read2_cb anyway, if this function
- * returns 1 - `uv_accept()` may be called for another time.
- */
-UV_EXTERN int uv_pipe_has_pending_handles(uv_pipe_t* handle,
-                                          uv_handle_type* type);
 
 
 /*
