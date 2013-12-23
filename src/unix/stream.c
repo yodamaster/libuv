@@ -56,6 +56,14 @@ struct uv__stream_select_s {
 };
 #endif /* defined(__APPLE__) */
 
+typedef struct uv__stream_queued_fds_s uv__stream_queued_fds_t;
+
+struct uv__stream_queued_fds_s {
+  int size;
+  int offset;
+  int fds[1];
+};
+
 static void uv__stream_connect(uv_stream_t*);
 static void uv__write(uv_stream_t* stream);
 static void uv__read(uv_stream_t* stream);
@@ -553,6 +561,7 @@ void uv__server_io(uv_loop_t* loop, uv__io_t* w, unsigned int events) {
 
 int uv_accept(uv_stream_t* server, uv_stream_t* client) {
   int err;
+  uv__stream_queued_fds_t* queued_fds;
 
   /* TODO document this */
   assert(server->loop == client->loop);
@@ -589,18 +598,20 @@ int uv_accept(uv_stream_t* server, uv_stream_t* client) {
 done:
   /* Process queued fds */
   if (server->queued_fds != NULL) {
+    queued_fds = server->queued_fds;
+
     /* Read first */
-    server->accepted_fd = server->queued_fds[2];
+    server->accepted_fd = queued_fds->fds[0];
 
     /* All read, free */
-    if (--server->queued_fds[0] == 0) {
-      free(server->queued_fds);
+    if (--queued_fds->offset == 0) {
+      free(queued_fds);
       server->queued_fds = NULL;
     } else {
       /* Shift rest */
-      memmove(server->queued_fds + 2,
-              server->queued_fds + 3,
-              server->queued_fds[0]);
+      memmove(queued_fds->fds,
+              queued_fds->fds + 1,
+              queued_fds->offset * sizeof(*queued_fds->fds));
     }
 
     /* Invoke read_cb one more time */
@@ -974,34 +985,33 @@ static void uv__stream_eof(uv_stream_t* stream, const uv_buf_t* buf) {
 
 
 static int uv__stream_queue_fd(uv_stream_t* stream, int fd) {
-  int queue_offset;
-  int queue_len;
+  uv__stream_queued_fds_t* queued_fds;
+  int queue_size;
 
-  if (stream->queued_fds == NULL) {
-    queue_offset = 0;
-    queue_len = 8;
-    stream->queued_fds = malloc((queue_len + 2) * sizeof(*stream->queued_fds));
-    if (stream->queued_fds == NULL)
+  queued_fds = stream->queued_fds;
+  if (queued_fds == NULL) {
+    queue_size = 8;
+    queued_fds = malloc((queue_size - 1) * sizeof(*queued_fds->fds) +
+                        sizeof(*queued_fds));
+    if (queued_fds == NULL)
       return UV_ENOMEM;
-  } else {
-    queue_offset = stream->queued_fds[0];
-    queue_len = stream->queued_fds[1];
+    queued_fds->size = queue_size;
+    queued_fds->offset = 0;
+    stream->queued_fds = queued_fds;
 
     /* Grow */
-    if (queue_offset == queue_len) {
-      queue_len += 8;
-      stream->queued_fds = realloc(stream->queued_fds,
-                                   (queue_len + 2) *
-                                       sizeof(*stream->queued_fds));
-      if (stream->queued_fds == NULL)
-        return UV_ENOMEM;
-    }
+  } else if (queued_fds->size == queued_fds->offset) {
+    queued_fds->size += 8;
+    queued_fds = realloc(queued_fds,
+                         (queued_fds->size - 1) * sizeof(*queued_fds->fds) +
+                             sizeof(*queued_fds));
+    if (queued_fds == NULL)
+      return UV_ENOMEM;
+    stream->queued_fds = queued_fds;
   }
 
   /* Put fd in a queue */
-  stream->queued_fds[2 + queue_offset++] = fd;
-  stream->queued_fds[0] = queue_offset;
-  stream->queued_fds[1] = queue_len;
+  queued_fds->fds[queued_fds->offset++] = fd;
 
   return 0;
 }
@@ -1526,6 +1536,9 @@ int uv___stream_fd(uv_stream_t* handle) {
 
 
 void uv__stream_close(uv_stream_t* handle) {
+  int i;
+  uv__stream_queued_fds_t* queued_fds;
+
 #if defined(__APPLE__)
   /* Terminate select loop first */
   if (handle->select != NULL) {
@@ -1563,7 +1576,14 @@ void uv__stream_close(uv_stream_t* handle) {
     handle->accepted_fd = -1;
   }
 
-  free(handle->queued_fds);
+  /* Close all queued fds */
+  if (handle->queued_fds != NULL) {
+    queued_fds = handle->queued_fds;
+    for (i = 0; i < queued_fds->offset; i++)
+      close(queued_fds->fds[i]);
+    free(handle->queued_fds);
+    handle->queued_fds = NULL;
+  }
 
   assert(!uv__io_active(&handle->io_watcher, UV__POLLIN | UV__POLLOUT));
 }
