@@ -1005,8 +1005,15 @@ static int uv__stream_queue_fd(uv_stream_t* stream, int fd) {
     queued_fds = realloc(queued_fds,
                          (queued_fds->size - 1) * sizeof(*queued_fds->fds) +
                              sizeof(*queued_fds));
-    if (queued_fds == NULL)
+
+    /*
+     * Allocation failure, report back.
+     * NOTE: if it is fatal - sockets will be closed in uv__stream_close
+     */
+    if (queued_fds == NULL) {
+      queued_fds->size -= 8;
       return UV_ENOMEM;
+    }
     stream->queued_fds = queued_fds;
   }
 
