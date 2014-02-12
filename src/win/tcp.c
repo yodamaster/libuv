@@ -262,6 +262,10 @@ static int uv_tcp_try_bind(uv_tcp_t* handle,
     }
   }
 
+#ifndef IPPROTO_IPV6
+  #define IPPROTO_IPV6 41
+#endif
+
 #ifdef IPV6_V6ONLY
   if (addr->sa_family == AF_INET6) {
     int on;

@@ -6,6 +6,14 @@ used by Mozilla's [Rust language](http://www.rust-lang.org/),
 [Luvit](http://luvit.io/), [Julia](http://julialang.org/),
 [pyuv](https://crate.io/packages/pyuv/), and [others](https://github.com/joyent/libuv/wiki/Projects-that-use-libuv).
 
+## Port to VC6
+
+This version of libuv has been ported to VC6, so you can compile it using Microsoft Visual C++ 6.0. Authored by Liigo, 2013-2014.
+
+My [tinyweb](https://github.com/liigo/tinyweb) (based on libuv-vc6) is also compiled by VC6.
+
+More port details: (coming later).
+
 ## Feature highlights
 
  * Full-featured event loop backed by epoll, kqueue, IOCP, event ports.
