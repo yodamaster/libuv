@@ -996,7 +996,7 @@ void uv_process_tcp_write_req(uv_loop_t* loop, uv_tcp_t* handle,
 
   if (handle->flags & UV_HANDLE_EMULATE_IOCP) {
     if (req->wait_handle != INVALID_HANDLE_VALUE) {
-      PUnregisterWait(req->wait_handle);
+      pUnregisterWait(req->wait_handle);
       req->wait_handle = INVALID_HANDLE_VALUE;
     }
     if (req->event_handle) {
