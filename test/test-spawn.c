@@ -236,7 +236,6 @@ TEST_IMPL(spawn_stdout_to_file) {
   uv_file file;
   uv_fs_t fs_req;
   uv_stdio_container_t stdio[2];
-  uv_buf_t buf;
 
   /* Setup. */
   unlink("stdout_file");
@@ -265,8 +264,8 @@ TEST_IMPL(spawn_stdout_to_file) {
   ASSERT(exit_cb_called == 1);
   ASSERT(close_cb_called == 1);
 
-  buf = uv_buf_init(output, sizeof(output));
-  r = uv_fs_read(uv_default_loop(), &fs_req, file, &buf, 1, 0, NULL);
+  r = uv_fs_read(uv_default_loop(), &fs_req, file, output, sizeof(output),
+      0, NULL);
   ASSERT(r == 12);
   uv_fs_req_cleanup(&fs_req);
 
@@ -290,7 +289,6 @@ TEST_IMPL(spawn_stdout_and_stderr_to_file) {
   uv_file file;
   uv_fs_t fs_req;
   uv_stdio_container_t stdio[3];
-  uv_buf_t buf;
 
   /* Setup. */
   unlink("stdout_file");
@@ -321,8 +319,8 @@ TEST_IMPL(spawn_stdout_and_stderr_to_file) {
   ASSERT(exit_cb_called == 1);
   ASSERT(close_cb_called == 1);
 
-  buf = uv_buf_init(output, sizeof(output));
-  r = uv_fs_read(uv_default_loop(), &fs_req, file, &buf, 1, 0, NULL);
+  r = uv_fs_read(uv_default_loop(), &fs_req, file, output, sizeof(output),
+      0, NULL);
   ASSERT(r == 27);
   uv_fs_req_cleanup(&fs_req);
 
