@@ -34,6 +34,8 @@
 #include <Winsock2.h>
 #include <winperf.h>
 
+#include "psapi/psapi.h"
+
 #define s6_addr
 #include "Iphlpapi/iphlpapi.h"
 #undef s6_addr
