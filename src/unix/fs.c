@@ -212,69 +212,10 @@ skip:
 
 
 static ssize_t uv__fs_read(uv_fs_t* req) {
-  ssize_t result;
-
-  if (req->off < 0) {
-    if (req->nbufs == 1)
-      result = read(req->file, req->bufs[0].base, req->bufs[0].len);
-    else
-      result = readv(req->file, (struct iovec*) req->bufs, req->nbufs);
-  } else {
-    if (req->nbufs == 1) {
-      result = pread(req->file, req->bufs[0].base, req->bufs[0].len, req->off);
-      goto done;
-    }
-
-#if HAVE_PREADV
-    result = preadv(req->file, (struct iovec*) req->bufs, req->nbufs, req->off);
-#else
-# if defined(__linux__)
-    static int no_preadv;
-    if (no_preadv)
-# endif
-    {
-      off_t nread;
-      size_t index;
-
-# if defined(__linux__)
-    retry:
-# endif
-      nread = 0;
-      index = 0;
-      result = 1;
-      do {
-        if (req->bufs[index].len > 0) {
-          result = pread(req->file,
-                         req->bufs[index].base,
-                         req->bufs[index].len,
-                         req->off + nread);
-          if (result > 0)
-            nread += result;
-        }
-        index++;
-      } while (index < req->nbufs && result > 0);
-      if (nread > 0)
-        result = nread;
-    }
-# if defined(__linux__)
-    else {
-      result = uv__preadv(req->file,
-                          (struct iovec*)req->bufs,
-                          req->nbufs,
-                          req->off);
-      if (result == -1 && errno == ENOSYS) {
-        no_preadv = 1;
-        goto retry;
-      }
-    }
-# endif
-#endif
-  }
-
-done:
-  if (req->bufs != req->bufsml)
-    free(req->bufs);
-  return result;
+  if (req->off < 0)
+    return read(req->file, req->buf, req->len);
+  else
+    return pread(req->file, req->buf, req->len, req->off);
 }
 
 
