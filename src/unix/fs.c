@@ -69,9 +69,6 @@
 # include <sys/sendfile.h>
 #elif defined(__APPLE__) || defined(__FreeBSD__)
 # include <sys/socket.h>
-#endif
-
-#if HAVE_PREADV || defined(__APPLE__)
 # include <sys/uio.h>
 #endif
 
@@ -393,7 +390,7 @@ static ssize_t uv__fs_sendfile_emul(uv_fs_t* req) {
   int out_fd;
   char buf[8192];
 
-  len = req->bufsml[0].len;
+  len = req->len;
   in_fd = req->flags;
   out_fd = req->file;
   offset = req->off;
@@ -506,7 +503,7 @@ static ssize_t uv__fs_sendfile(uv_fs_t* req) {
     ssize_t r;
 
     off = req->off;
-    r = sendfile(out_fd, in_fd, &off, req->bufsml[0].len);
+    r = sendfile(out_fd, in_fd, &off, req->len);
 
     /* sendfile() on SunOS returns EINVAL if the target fd is not a socket but
      * it still writes out data. Fortunately, we can detect it by checking if
@@ -540,11 +537,11 @@ static ssize_t uv__fs_sendfile(uv_fs_t* req) {
 
 #if defined(__FreeBSD__)
     len = 0;
-    r = sendfile(in_fd, out_fd, req->off, req->bufsml[0].len, NULL, &len, 0);
+    r = sendfile(in_fd, out_fd, req->off, req->len, NULL, &len, 0);
 #else
     /* The darwin sendfile takes len as an input for the length to send,
      * so make sure to initialize it with the caller's value. */
-    len = req->bufsml[0].len;
+    len = req->len;
     r = sendfile(in_fd, out_fd, req->off, &len, NULL, 0);
 #endif
 
@@ -653,9 +650,6 @@ done:
 #if defined(__APPLE__)
   pthread_mutex_unlock(&lock);
 #endif
-
-  if (req->bufs != req->bufsml)
-    free(req->bufs);
 
   return r;
 }
@@ -1007,23 +1001,14 @@ int uv_fs_open(uv_loop_t* loop,
 
 int uv_fs_read(uv_loop_t* loop, uv_fs_t* req,
                uv_file file,
-               const uv_buf_t bufs[],
-               unsigned int nbufs,
+               void* buf,
+               size_t len,
                int64_t off,
                uv_fs_cb cb) {
   INIT(READ);
   req->file = file;
-
-  req->nbufs = nbufs;
-  req->bufs = req->bufsml;
-  if (nbufs > ARRAY_SIZE(req->bufsml))
-    req->bufs = malloc(nbufs * sizeof(*bufs));
-
-  if (req->bufs == NULL)
-    return -ENOMEM;
-
-  memcpy(req->bufs, bufs, nbufs * sizeof(*bufs));
-
+  req->buf = buf;
+  req->len = len;
   req->off = off;
   POST;
 }
@@ -1080,7 +1065,7 @@ int uv_fs_sendfile(uv_loop_t* loop,
   req->flags = in_fd; /* hack */
   req->file = out_fd;
   req->off = off;
-  req->bufsml[0].len = len;
+  req->len = len;
   POST;
 }
 
@@ -1129,23 +1114,14 @@ int uv_fs_utime(uv_loop_t* loop,
 int uv_fs_write(uv_loop_t* loop,
                 uv_fs_t* req,
                 uv_file file,
-                const uv_buf_t bufs[],
-                unsigned int nbufs,
+                const void* buf,
+                size_t len,
                 int64_t off,
                 uv_fs_cb cb) {
   INIT(WRITE);
   req->file = file;
-
-  req->nbufs = nbufs;
-  req->bufs = req->bufsml;
-  if (nbufs > ARRAY_SIZE(req->bufsml))
-    req->bufs = malloc(nbufs * sizeof(*bufs));
-
-  if (req->bufs == NULL)
-    return -ENOMEM;
-
-  memcpy(req->bufs, bufs, nbufs * sizeof(*bufs));
-
+  req->buf = (void*) buf;
+  req->len = len;
   req->off = off;
   POST;
 }
