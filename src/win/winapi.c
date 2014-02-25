@@ -219,6 +219,5 @@ void uv_winapi_init() {
 
   pGetAddrInfoW = (sGetAddrInfoW)
     GetProcAddress(GetModuleHandleA("Ws2_32.dll"), "GetAddrInfoW");
-
 }
 
