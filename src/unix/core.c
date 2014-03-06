@@ -70,6 +70,12 @@
 # endif
 #endif
 
+#if __FreeBSD__ >= 10
+# define uv__accept4 accept4
+# define UV__SOCK_NONBLOCK SOCK_NONBLOCK
+# define UV__SOCK_CLOEXEC  SOCK_CLOEXEC
+#endif
+
 static void uv__run_pending(uv_loop_t* loop);
 
 /* Verify that uv_buf_t is ABI-compatible with struct iovec. */
