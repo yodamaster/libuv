@@ -173,7 +173,7 @@ int uv_fs_event_start(uv_fs_event_t* handle,
   }
 
   /* Determine whether path is a file or a directory. */
-  attr = pGetFileAttributesW(pathw);
+  attr = GetFileAttributesW(pathw);
   if (attr == (DWORD)-1/*INVALID_FILE_ATTRIBUTES*/) {
     last_error = GetLastError();
     goto error;
