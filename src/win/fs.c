@@ -220,7 +220,6 @@ INLINE static int fs__capture_path(uv_loop_t* loop, uv_fs_t* req,
 }
 
 
-
 INLINE static void uv_fs_req_init(uv_loop_t* loop, uv_fs_t* req,
     uv_fs_type fs_type, const uv_fs_cb cb) {
   uv_req_init(loop, (uv_req_t*) req);
