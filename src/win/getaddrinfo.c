@@ -56,38 +56,6 @@
 #define ALIGNED_SIZE(X)     ((((X) + 3) >> 2) << 2)
 
 
-/* Error codes from getaddrinfo() */
-#define EAI_AGAIN           WSATRY_AGAIN
-#define EAI_BADFLAGS        WSAEINVAL
-#define EAI_FAIL            WSANO_RECOVERY
-#define EAI_FAMILY          WSAEAFNOSUPPORT
-#define EAI_MEMORY          WSA_NOT_ENOUGH_MEMORY
-#define EAI_NOSECURENAME    WSA_SECURE_HOST_NOT_FOUND
-//#define EAI_NODATA        WSANO_DATA
-#define EAI_NONAME          WSAHOST_NOT_FOUND
-#define EAI_SERVICE         WSATYPE_NOT_FOUND
-#define EAI_SOCKTYPE        WSAESOCKTNOSUPPORT
-#define EAI_IPSECPOLICY     WSA_IPSEC_NAME_POLICY_ERROR
-
-/*
- * getaddrinfo error code mapping
- * Falls back to uv_translate_sys_error if no match
- */
-static uv_err_code uv_translate_eai_error(int eai_errno) {
-  switch (eai_errno) {
-    case ERROR_SUCCESS:               return UV_OK;
-    case EAI_BADFLAGS:                return UV_EBADF;
-    case EAI_FAIL:                    return UV_EFAULT;
-    case EAI_FAMILY:                  return UV_EAIFAMNOSUPPORT;
-    case EAI_MEMORY:                  return UV_ENOMEM;
-    case EAI_NONAME:                  return UV_ENOENT;
-    case EAI_AGAIN:                   return UV_EAGAIN;
-    case EAI_SERVICE:                 return UV_EAISERVICE;
-    case EAI_SOCKTYPE:                return UV_EAISOCKTYPE;
-    default:                          return uv_translate_sys_error(eai_errno);
-  }
-}
-
 /* getaddrinfo worker thread implementation */
 static DWORD WINAPI getaddrinfo_thread_proc(void* parameter) {
   uv_getaddrinfo_t* req = (uv_getaddrinfo_t*) parameter;
