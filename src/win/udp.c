@@ -553,9 +553,10 @@ static int uv__udp_set_membership4(uv_udp_t* handle,
   err = uv_udp_maybe_bind(handle,
                           (const struct sockaddr*) &uv_addr_ip4_any_,
                           sizeof(uv_addr_ip4_any_),
-                          UV_UDP_REUSEADDR);
-  if (err)
-    return uv_translate_sys_error(err);
+                          0);
+    if (err)
+      return uv_translate_sys_error(err);
+  }
 
   memset(&mreq, 0, sizeof mreq);
 
@@ -595,6 +596,76 @@ int uv__udp_set_membership6(uv_udp_t* handle,
                             const char* interface_addr,
                             uv_membership membership) {
   int optname;
+  int err;
+  struct ipv6_mreq mreq;
+  struct sockaddr_in6 addr6;
+
+  if ((handle->flags & UV_HANDLE_BOUND) && !(handle->flags & UV_HANDLE_IPV6))
+    return UV_EINVAL;
+
+  if (!(handle->flags & UV_HANDLE_BOUND)) {
+    err = uv_udp_try_bind(handle,
+                          (const struct sockaddr*) &uv_addr_ip6_any_,
+                          sizeof(uv_addr_ip6_any_),
+                          0);
+
+    if (err)
+      return uv_translate_sys_error(err);
+  }
+
+  memset(&mreq, 0, sizeof(mreq));
+
+  if (interface_addr) {
+    if (uv_ip6_addr(interface_addr, 0, &addr6))
+      return UV_EINVAL;
+    mreq.ipv6mr_interface = addr6.sin6_scope_id;
+  } else {
+    mreq.ipv6mr_interface = 0;
+  }
+
+  mreq.ipv6mr_multiaddr = multicast_addr->sin6_addr;
+
+  switch (membership) {
+  case UV_JOIN_GROUP:
+    optname = IPV6_ADD_MEMBERSHIP;
+    break;
+  case UV_LEAVE_GROUP:
+    optname = IPV6_DROP_MEMBERSHIP;
+    break;
+  default:
+    return UV_EINVAL;
+  }
+
+  if (setsockopt(handle->socket,
+                 IPPROTO_IPV6,
+                 optname,
+                 (char*) &mreq,
+                 sizeof mreq) == SOCKET_ERROR) {
+    return uv_translate_sys_error(WSAGetLastError());
+  }
+
+  return 0;
+}
+
+
+int uv_udp_set_membership(uv_udp_t* handle,
+                          const char* multicast_addr,
+                          const char* interface_addr,
+                          uv_membership membership) {
+  struct sockaddr_in addr4;
+  struct sockaddr_in6 addr6;
+
+  if (uv_ip4_addr(multicast_addr, 0, &addr4) == 0)
+    return uv__udp_set_membership4(handle, &addr4, interface_addr, membership);
+  else if (uv_ip6_addr(multicast_addr, 0, &addr6) == 0)
+    return uv__udp_set_membership6(handle, &addr6, interface_addr, membership);
+  else
+    return UV_EINVAL;
+}
+
+
+int uv_udp_set_multicast_interface(uv_udp_t* handle, const char* interface_addr) {
+  struct in_addr addr;
   int err;
   struct ipv6_mreq mreq;
   struct sockaddr_in6 addr6;
