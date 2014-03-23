@@ -691,9 +691,9 @@ TEST_IMPL(spawn_closed_process_io) {
   uv_write_t write_req;
   uv_buf_t buf;
   uv_stdio_container_t stdio[2];
-  static char buffer[] = "hello-from-spawn_stdin\n";
+  static char buffer[] = "hello-from-spawn_stdin";
 
-  init_process_options("spawn_helper3", exit_cb);
+  init_process_options("spawn_helper1", exit_cb);
 
   uv_pipe_init(uv_default_loop(), &in, 0);
   options.stdio = stdio;
@@ -703,9 +703,11 @@ TEST_IMPL(spawn_closed_process_io) {
 
   close(0); /* Close process stdin. */
 
-  ASSERT(0 == uv_spawn(uv_default_loop(), &process, &options));
+  ASSERT(0 == uv_spawn(uv_default_loop(), &process, options));
 
-  buf = uv_buf_init(buffer, sizeof(buffer));
+  buf.base = buffer;
+  buf.len = sizeof(buffer);
+
   ASSERT(0 == uv_write(&write_req, (uv_stream_t*) &in, &buf, 1, write_cb));
 
   ASSERT(0 == uv_run(uv_default_loop(), UV_RUN_DEFAULT));
