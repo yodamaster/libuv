@@ -44,6 +44,7 @@ static void close_cb(uv_handle_t* handle) {
 
 static void sv_send_cb(uv_udp_send_t* req, int status) {
   ASSERT(req != NULL);
+  printf("-- sv_send_cb: %s (%d): %s\n", uv_err_name(status), status, uv_strerror(status));
   ASSERT(status == 0);
   CHECK_HANDLE(req->handle);
 
@@ -72,7 +73,7 @@ TEST_IMPL(udp_multicast_interface6) {
 #if defined(__APPLE__)
   r = uv_udp_set_multicast_interface(&server, "::1%lo0");
 #else
-  r = uv_udp_set_multicast_interface(&server, NULL);
+  r = uv_udp_set_multicast_interface(&server, "::1");
 #endif
   ASSERT(r == 0);
 
