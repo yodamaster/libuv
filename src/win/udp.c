@@ -553,10 +553,9 @@ static int uv__udp_set_membership4(uv_udp_t* handle,
   err = uv_udp_maybe_bind(handle,
                           (const struct sockaddr*) &uv_addr_ip4_any_,
                           sizeof(uv_addr_ip4_any_),
-                          0);
-    if (err)
-      return uv_translate_sys_error(err);
-  }
+                          UV_UDP_REUSEADDR);
+  if (err)
+    return uv_translate_sys_error(err);
 
   memset(&mreq, 0, sizeof mreq);
 
@@ -603,15 +602,13 @@ int uv__udp_set_membership6(uv_udp_t* handle,
   if ((handle->flags & UV_HANDLE_BOUND) && !(handle->flags & UV_HANDLE_IPV6))
     return UV_EINVAL;
 
-  if (!(handle->flags & UV_HANDLE_BOUND)) {
-    err = uv_udp_try_bind(handle,
+  err = uv_udp_maybe_bind(handle,
                           (const struct sockaddr*) &uv_addr_ip6_any_,
                           sizeof(uv_addr_ip6_any_),
-                          0);
+                          UV_UDP_REUSEADDR);
 
-    if (err)
-      return uv_translate_sys_error(err);
-  }
+  if (err)
+    return uv_translate_sys_error(err);
 
   memset(&mreq, 0, sizeof(mreq));
 
@@ -642,78 +639,6 @@ int uv__udp_set_membership6(uv_udp_t* handle,
                  (char*) &mreq,
                  sizeof mreq) == SOCKET_ERROR) {
     return uv_translate_sys_error(WSAGetLastError());
-  }
-
-  return 0;
-}
-
-
-int uv_udp_set_membership(uv_udp_t* handle,
-                          const char* multicast_addr,
-                          const char* interface_addr,
-                          uv_membership membership) {
-  struct sockaddr_in addr4;
-  struct sockaddr_in6 addr6;
-
-  if (uv_ip4_addr(multicast_addr, 0, &addr4) == 0)
-    return uv__udp_set_membership4(handle, &addr4, interface_addr, membership);
-  else if (uv_ip6_addr(multicast_addr, 0, &addr6) == 0)
-    return uv__udp_set_membership6(handle, &addr6, interface_addr, membership);
-  else
-    return UV_EINVAL;
-}
-
-
-int uv_udp_set_multicast_interface(uv_udp_t* handle, const char* interface_addr) {
-  int err;
-  struct sockaddr_storage addr_st;
-  struct sockaddr_in* addr4;
-  struct sockaddr_in6* addr6;
-
-  if (err)
-    return uv_translate_sys_error(err);
-
-  memset(&mreq, 0, sizeof(mreq));
-
-  addr4 = (struct sockaddr_in*) &addr_st;
-  addr6 = (struct sockaddr_in6*) &addr_st;
-
-  if (!interface_addr) {
-    memset(&addr_st, 0, sizeof addr_st);
-    if (handle->flags & UV_HANDLE_IPV6) {
-      addr_st.ss_family = AF_INET6;
-      addr6->sin6_scope_id = 0;
-    } else {
-      addr_st.ss_family = AF_INET;
-      addr4->sin_addr.s_addr = htonl(INADDR_ANY);
-    }
-  } else if (uv_ip4_addr(interface_addr, 0, addr4) == 0) {
-    /* nothing, address was parsed */
-  } else if (uv_ip6_addr(interface_addr, 0, addr6) == 0) {
-    /* nothing, address was parsed */
-  } else {
-    return UV_EINVAL;
-  }
-
-  if (addr_st.ss_family == AF_INET) {
-    if (setsockopt(handle->socket,
-                   IPPROTO_IP,
-                   IP_MULTICAST_IF,
-                   (char*) &addr4->sin_addr,
-                   sizeof(addr4->sin_addr)) == SOCKET_ERROR) {
-      return uv_translate_sys_error(WSAGetLastError());
-    }
-  } else if (addr_st.ss_family == AF_INET6) {
-    if (setsockopt(handle->socket,
-                   IPPROTO_IPV6,
-                   IPV6_MULTICAST_IF,
-                   (char*) &addr6->sin6_scope_id,
-                   sizeof(addr6->sin6_scope_id)) == SOCKET_ERROR) {
-      return uv_translate_sys_error(WSAGetLastError());
-    }
-  } else {
-    assert(0 && "unexpected address family");
-    abort();
   }
 
   return 0;

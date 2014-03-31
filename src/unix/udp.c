@@ -556,15 +556,23 @@ int uv_udp_set_membership(uv_udp_t* handle,
                           const char* multicast_addr,
                           const char* interface_addr,
                           uv_membership membership) {
+  int err;
   struct sockaddr_in addr4;
   struct sockaddr_in6 addr6;
 
-  if (uv_ip4_addr(multicast_addr, 0, &addr4) == 0)
+  if (uv_ip4_addr(multicast_addr, 0, &addr4) == 0) {
+    err = uv__udp_maybe_deferred_bind(handle, AF_INET, UV_UDP_REUSEADDR);
+    if (err)
+      return err;
     return uv__udp_set_membership4(handle, &addr4, interface_addr, membership);
-  else if (uv_ip6_addr(multicast_addr, 0, &addr6) == 0)
+  } else if (uv_ip6_addr(multicast_addr, 0, &addr6) == 0) {
+    err = uv__udp_maybe_deferred_bind(handle, AF_INET6, UV_UDP_REUSEADDR);
+    if (err)
+      return err;
     return uv__udp_set_membership6(handle, &addr6, interface_addr, membership);
-  else
+  } else {
     return -EINVAL;
+  }
 }
 
 
@@ -619,6 +627,7 @@ int uv_udp_set_multicast_loop(uv_udp_t* handle, int on) {
 }
 
 int uv_udp_set_multicast_interface(uv_udp_t* handle, const char* interface_addr) {
+  int err;
   struct sockaddr_storage addr_st;
   struct sockaddr_in* addr4;
   struct sockaddr_in6* addr6;
@@ -639,6 +648,9 @@ int uv_udp_set_multicast_interface(uv_udp_t* handle, const char* interface_addr)
   }
 
   if (addr_st.ss_family == AF_INET) {
+    err = uv__udp_maybe_deferred_bind(handle, AF_INET, UV_UDP_REUSEADDR);
+    if (err)
+      return err;
     if (setsockopt(handle->io_watcher.fd,
                    IPPROTO_IP,
                    IP_MULTICAST_IF,
@@ -647,6 +659,9 @@ int uv_udp_set_multicast_interface(uv_udp_t* handle, const char* interface_addr)
       return -errno;
     }
   } else if (addr_st.ss_family == AF_INET6) {
+    err = uv__udp_maybe_deferred_bind(handle, AF_INET6, UV_UDP_REUSEADDR);
+    if (err)
+      return err;
     if (setsockopt(handle->io_watcher.fd,
                    IPPROTO_IPV6,
                    IPV6_MULTICAST_IF,
