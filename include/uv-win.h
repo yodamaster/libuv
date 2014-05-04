@@ -29,7 +29,7 @@ typedef intptr_t ssize_t;
 # define _SSIZE_T_DEFINED
 #endif
 
-#define HAVE_PLATFORM_SDK 1
+#define HAVE_PLATFORM_SDK 0
 
 #if(!HAVE_PLATFORM_SDK)
 #  if(_WIN32_WINNT >= 0x0400)
