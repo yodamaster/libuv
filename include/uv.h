@@ -420,6 +420,7 @@ typedef void (*uv_getaddrinfo_cb)(uv_getaddrinfo_t* req,
                                   int status,
                                   struct addrinfo* res);
 
+#if(!HAVE_PLATFORM_SDK)
 //http://msdn.microsoft.com/en-us/library/windows/desktop/ms737530(v=vs.85).aspx
 typedef struct addrinfo {
   int             ai_flags;
@@ -443,6 +444,7 @@ typedef struct addrinfoW {
   struct sockaddr  *ai_addr;
   struct addrinfoW  *ai_next;
 } ADDRINFOW, *PADDRINFOW;
+#endif
 
 typedef struct {
   long tv_sec;
@@ -516,7 +518,7 @@ struct uv_req_s {
   UV_REQ_FIELDS
 };
 
-
+#if(!HAVE_PLATFORM_SDK)
 //http://stackoverflow.com/questions/1345109/why-sockaddr-storage-structure-defined-as-the-way-it-is-defined
 struct sockaddr_storage {
   short   ss_family;
@@ -524,6 +526,7 @@ struct sockaddr_storage {
   int64_t __ss_align;
   char    __ss_pad2[112];
 };
+#endif
 
 /* Platform-specific request types */
 UV_PRIVATE_REQ_TYPES

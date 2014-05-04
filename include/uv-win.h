@@ -29,7 +29,13 @@ typedef intptr_t ssize_t;
 # define _SSIZE_T_DEFINED
 #endif
 
-#include <windows.h> // windows.h must be included before winsock2.h if PlatformSDK is not available and _WIN32_WINNT >= 0x0400
+#define HAVE_PLATFORM_SDK 1
+
+#if(!HAVE_PLATFORM_SDK)
+#  if(_WIN32_WINNT >= 0x0400)
+#    include <windows.h> // windows.h must be included before winsock2.h if PlatformSDK is not available and _WIN32_WINNT >= 0x0400
+#  endif
+#endif
 #include <winsock2.h>
 #include <mswsock.h>
 #include <ws2tcpip.h>

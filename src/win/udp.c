@@ -603,6 +603,7 @@ static int uv__udp_set_membership4(uv_udp_t* handle,
 	#define IPV6_DROP_MEMBERSHIP 13
 #endif
 
+#if(!HAVE_PLATFORM_SDK)
 #ifndef IPV6_MREQ
 	struct in6_addr {
 	  u_char  s6_addr[16];
@@ -611,6 +612,7 @@ static int uv__udp_set_membership4(uv_udp_t* handle,
 	  struct in6_addr ipv6mr_multiaddr;
 	  unsigned int    ipv6mr_interface;
 	} IPV6_MREQ, *PIPV6_MREQ;
+#endif
 #endif
 
 /* The ws2tcpip.h header included in VC6 doesn't define the

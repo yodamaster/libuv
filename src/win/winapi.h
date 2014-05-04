@@ -4109,9 +4109,10 @@
 # define DEVICE_TYPE DWORD
 #endif
 
+#if(HAVE_PLATFORM_SDK)
 /* from ntifs.h */
 /* MinGW already has it, mingw-w64 does not. */
-#if /*defined(_MSC_VER) ||*/ defined(__MINGW64_VERSION_MAJOR)
+#if defined(_MSC_VER) || defined(__MINGW64_VERSION_MAJOR)
   typedef struct _REPARSE_DATA_BUFFER {
     ULONG  ReparseTag;
     USHORT ReparseDataLength;
@@ -4138,8 +4139,11 @@
     } DUMMYUNIONNAME;
   } REPARSE_DATA_BUFFER, *PREPARSE_DATA_BUFFER;
 #endif
+#endif
 
+#if(!HAVE_PLATFORM_SDK)
 typedef unsigned int* ULONG_PTR;
+#endif
 
 typedef struct _IO_STATUS_BLOCK {
   union {
@@ -4640,6 +4644,7 @@ typedef BOOL (WINAPI* sRegisterWaitForSingleObject)
               ULONG dwMilliseconds,
               ULONG dwFlags);
 
+#if(!HAVE_PLATFORM_SDK)
 typedef struct _MEMORYSTATUSEX {
 	DWORD     dwLength;
 	DWORD     dwMemoryLoad;
@@ -4651,6 +4656,8 @@ typedef struct _MEMORYSTATUSEX {
 	DWORDLONG ullAvailVirtual;
 	DWORDLONG ullAvailExtendedVirtual;
 } MEMORYSTATUSEX, *LPMEMORYSTATUSEX;
+#endif
+
 typedef BOOL (WINAPI* sGlobalMemoryStatusEx) (LPMEMORYSTATUSEX lpBuffer);
 
 typedef BOOL (WINAPI* sQueueUserWorkItem)

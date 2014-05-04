@@ -49,7 +49,7 @@ typedef struct env_var {
 static HANDLE uv_global_job_handle_;
 static uv_once_t uv_global_job_handle_init_guard_ = UV_ONCE_INIT;
 
-
+#if(!HAVE_PLATFORM_SDK)
 typedef struct _IO_COUNTERS {
   ULONGLONG ReadOperationCount;
   ULONGLONG WriteOperationCount;
@@ -67,6 +67,7 @@ typedef struct _JOBOBJECT_EXTENDED_LIMIT_INFORMATION {
   SIZE_T                            PeakProcessMemoryUsed;
   SIZE_T                            PeakJobMemoryUsed;
 } JOBOBJECT_EXTENDED_LIMIT_INFORMATION, *PJOBOBJECT_EXTENDED_LIMIT_INFORMATION;
+#endif
 
 static void uv__init_global_job_handle(void) {
   /* Create a job object and set it up to kill all contained processes when

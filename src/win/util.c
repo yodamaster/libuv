@@ -36,9 +36,15 @@
 
 #include "psapi/psapi.h"
 
+#if(!HAVE_PLATFORM_SDK)
 #define s6_addr
+#endif
+
 #include "Iphlpapi/iphlpapi.h"
+
+#if(!HAVE_PLATFORM_SDK)
 #undef s6_addr
+#endif
 
 #include "psapi/psapi.h"
 #include <tlhelp32.h>
