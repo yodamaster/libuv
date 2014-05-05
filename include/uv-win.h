@@ -41,6 +41,21 @@ typedef intptr_t ssize_t;
 #include <ws2tcpip.h>
 #include <windows.h>
 
+// detect confliction between value of HAVE_PLATFORM_SDK and actual availability of PlatformSDK
+#ifdef _INC_WINDOWS // windows.h has been scanned
+#  ifndef HAVE_PLATFORM_SDK // HAVE_PLATFORM_SDK hasn't been defined
+#    error HAVE_PLATFORM_SDK hasn't been defined, please define it first.
+#  elif(!HAVE_PLATFORM_SDK) // HAVE_PLATFORM_SDK == 0
+#    ifdef GetWindowLongPtr
+#      error HAVE_PLATFORM_SDK has been defined as 0x00 but PlatformSDK detected, please define HAVE_PLATFORM_SDK to 0x01 or remove PlatformSDK from include path!
+#    endif
+#  else
+#    ifndef GetWindowLongPtr
+#      error HAVE_PLATFORM_SDK has been defined as 0x01 but no PlatformSDK detected, please define HAVE_PLATFORM_SDK to 0x00 or add PlatformSDK to include path!
+#    endif
+#  endif
+#endif // _INC_WINDOWS
+
 #include <process.h>
 #include <signal.h>
 #include <sys/stat.h>
