@@ -33,6 +33,28 @@ typedef intptr_t ssize_t;
 #ifndef _INC_WINDOWS
 #  define WIN32_LEAN_AND_MEAN // don't include winsock.h or winsock2.h within windows.h, we'll include it explicitly latter.
 #  include <windows.h>
+
+// For compilers that don't support nameless unions
+// ( if windows.h is included without WIN32_LEAN_AND_MEAN been defined,
+//   windows.h will include winspool.h,
+//   winspool.h will include prsht.h,
+//   and following macro will be defined in prsht.h
+// )
+#  ifndef DUMMYUNIONNAME
+#    ifdef NONAMELESSUNION
+#      define DUMMYUNIONNAME   u
+#      define DUMMYUNIONNAME2  u2
+#      define DUMMYUNIONNAME3  u3
+#      define DUMMYUNIONNAME4  u4
+#      define DUMMYUNIONNAME5  u5
+#    else
+#      define DUMMYUNIONNAME
+#      define DUMMYUNIONNAME2
+#      define DUMMYUNIONNAME3
+#      define DUMMYUNIONNAME4
+#      define DUMMYUNIONNAME5
+#    endif
+#  endif // DUMMYUNIONNAME
 #endif
 
 // auto detect availability of PlatformSDK
