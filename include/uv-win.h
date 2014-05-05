@@ -29,7 +29,18 @@ typedef intptr_t ssize_t;
 # define _SSIZE_T_DEFINED
 #endif
 
-#define HAVE_PLATFORM_SDK 0
+// make sure windows.h is included first, so we can detect availability of PlatformSDK
+#ifndef _INC_WINDOWS
+#  define WIN32_LEAN_AND_MEAN // don't include winsock.h or winsock2.h within windows.h, we'll include it explicitly latter.
+#  include <windows.h>
+#endif
+
+// auto detect availability of PlatformSDK
+#ifdef GetWindowLongPtr
+#  define HAVE_PLATFORM_SDK 1
+#else
+#  define HAVE_PLATFORM_SDK 0
+#endif
 
 #if(!HAVE_PLATFORM_SDK)
 #  if(_WIN32_WINNT >= 0x0400)
